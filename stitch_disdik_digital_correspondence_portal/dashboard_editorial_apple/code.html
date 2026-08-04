@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Chronicle - Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed": "#dce2f3",
+                        "inverse-primary": "#c8c6c5",
+                        "tertiary": "#000000",
+                        "on-secondary-fixed": "#151c27",
+                        "surface-container": "#eeeeee",
+                        "on-background": "#1a1c1c",
+                        "inverse-surface": "#2f3131",
+                        "surface-container-high": "#e8e8e8",
+                        "on-surface-variant": "#444748",
+                        "tertiary-fixed-dim": "#c6c7c6",
+                        "surface-container-low": "#f3f3f4",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed": "#1c1b1b",
+                        "surface-bright": "#f9f9f9",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-surface": "#1a1c1c",
+                        "primary": "#000000",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#454747",
+                        "surface-dim": "#dadada",
+                        "background": "#f9f9f9",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#1a1c1c",
+                        "secondary": "#585f6c",
+                        "primary-fixed": "#e5e2e1",
+                        "on-secondary": "#ffffff",
+                        "surface": "#f9f9f9",
+                        "on-primary-container": "#858383",
+                        "secondary-fixed-dim": "#c0c7d6",
+                        "surface-tint": "#5f5e5e",
+                        "secondary-container": "#dce2f3",
+                        "on-secondary-fixed-variant": "#404754",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#474746",
+                        "primary-container": "#1c1b1b",
+                        "outline": "#747878",
+                        "on-secondary-container": "#5e6572",
+                        "error-container": "#ffdad6",
+                        "surface-variant": "#e2e2e2",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#f0f1f1",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#838483",
+                        "outline-variant": "#c4c7c7",
+                        "on-tertiary-fixed": "#1a1c1c",
+                        "tertiary-fixed": "#e2e2e2"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.125rem",
+                        lg: "0.25rem",
+                        xl: "0.5rem",
+                        full: "0.75rem"
+                    },
+                    spacing: {
+                        "container-max": "1200px",
+                        "section-gap": "128px",
+                        "unit": "8px",
+                        "gutter": "32px",
+                        "margin-mobile": "24px",
+                        "margin-desktop": "64px"
+                    },
+                    fontFamily: {
+                        "display-lg-mobile": ["EB Garamond", "serif"],
+                        "headline-lg": ["EB Garamond", "serif"],
+                        "display-lg": ["EB Garamond", "serif"],
+                        "label-sm": ["Inter", "sans-serif"],
+                        "headline-md": ["EB Garamond", "serif"],
+                        "body-md": ["Inter", "sans-serif"],
+                        "body-lg": ["Inter", "sans-serif"]
+                    },
+                    fontSize: {
+                        "display-lg-mobile": ["40px", { lineHeight: "48px", letterSpacing: "-0.01em", fontWeight: "400" }],
+                        "headline-lg": ["40px", { lineHeight: "48px", fontWeight: "400" }],
+                        "display-lg": ["64px", { lineHeight: "72px", letterSpacing: "-0.02em", fontWeight: "400" }],
+                        "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "headline-md": ["32px", { lineHeight: "40px", fontWeight: "400" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col md:flex-row antialiased selection:bg-primary selection:text-on-primary">
+<!-- Mobile Top Navigation -->
+<div class="md:hidden w-full sticky top-0 z-40 bg-surface/80 backdrop-blur-xl border-b border-outline/10 flex justify-between items-center h-16 px-margin-mobile">
+<span class="font-headline-md text-primary tracking-tight">The Chronicle</span>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors duration-300">notifications</span>
+<img class="w-8 h-8 rounded-full object-cover border border-outline/20" data-alt="A small, high-resolution portrait photograph of a mature professional in a tailored dark suit. The lighting is soft and editorial, casting a gentle shadow to one side. The background is a clean, neutral off-white to maintain a minimalist high-end aesthetic. The mood is confident and authoritative." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBddhqfa-rh8siJvBcLFaLAm-dKVXWOMOrRcfrR97pRh3rsW6xy5xAmSGmrfj2MNPrJQ0Z5h7wgcXRnybJq1b3fy3ndHCTyoEi1-flS20e0QsLo6FqcYiWoWB4FwXewBhdZpPfnUdHGSZ157HA1StrAlHjyNJJI04e_hkAETlKZACl_ib3UB1BTZKDhyAL9m-ZtWOWDKfC58P6u0eVjWqiB9RRKldgVtOEJIlQefFtNJ3qoTCA7eodJWQ"/>
+</div>
+</div>
+<!-- Desktop Side Navigation -->
+<nav class="hidden md:flex h-screen w-72 fixed left-0 top-0 z-50 flex-col py-8 px-6 bg-surface-container-lowest/70 backdrop-blur-3xl border-r border-outline/5 shadow-sm opacity-100">
+<div class="mb-12 flex items-center gap-4">
+<img class="w-10 h-10 rounded-full border border-outline/10 p-1 bg-surface" data-alt="A minimalist line-art illustration of an official seal or crest, rendered in crisp black on a pure white background. The design is elegant, symmetrical, and subtly authoritative, fitting for a premium editorial or academic department. The aesthetic is extremely clean with plenty of negative space." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcZJ2NzvDCm_ED1tSay9PTYq7Aaz3kAAaOfkJ5Ro3RR8g9I5J0mrGgbhQ9rcyl6R2k05iK35jmDcls1FnINfEhZhaj2lm1OBeqMv4MmSAgepK6uk6pQ9TFHFP_93HyXWYxF4qxE0pk5QN5_yF3srMHVqr4WwnhJ51_qylo6OTwc6h3z2sBVTZ48n9dBQL3M7zeoNdNWM59VNvrKG-yft-ZsYowCTINx806u71uSOmhvYM9pKGcFQ8lNA"/>
+<div>
+<h2 class="font-headline-md text-primary leading-tight text-xl">Education Dept.</h2>
+<p class="font-body-md text-sm text-on-surface-variant">Correspondence Bureau</p>
+</div>
+</div>
+<button class="mb-8 w-full py-3 px-4 bg-primary text-on-primary font-label-sm uppercase tracking-widest rounded-DEFAULT hover:bg-inverse-surface transition-colors duration-300 flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+            New Entry
+        </button>
+<div class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-4 text-primary bg-secondary-container/30 rounded-lg px-4 py-3 font-label-sm uppercase tracking-widest scale-95 active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined">drafts</span>
+                Dispatch
+            </a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 font-label-sm uppercase tracking-widest hover:bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+                Archive
+            </a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 font-label-sm uppercase tracking-widest hover:bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+                Editorial
+            </a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 font-label-sm uppercase tracking-widest hover:bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined">school</span>
+                Faculty
+            </a>
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 font-label-sm uppercase tracking-widest hover:bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined">gavel</span>
+                Directives
+            </a>
+</div>
+<div class="mt-auto border-t border-outline/10 pt-4">
+<a class="flex items-center gap-4 text-on-surface-variant px-4 py-3 font-label-sm uppercase tracking-widest hover:bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+                Support
+            </a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-72 p-margin-mobile md:p-margin-desktop max-w-container-max mx-auto w-full">
+<!-- Header -->
+<header class="mb-gutter flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-outline/10 pb-8">
+<div>
+<p class="font-label-sm text-on-surface-variant uppercase tracking-widest mb-2">October 24, 2023</p>
+<h1 class="font-display-lg-mobile md:font-display-lg text-primary">Ringkasan</h1>
+</div>
+<div class="hidden md:flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors">search</span>
+<input class="pl-10 pr-4 py-2 bg-transparent border-b border-outline/20 focus:border-primary focus:ring-0 outline-none w-64 transition-all font-body-md text-on-surface placeholder:text-on-surface-variant/50" placeholder="Search entries..." type="text"/>
+</div>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-surface"></span>
+</button>
+</div>
+</header>
+<!-- Stats Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-section-gap">
+<!-- Stat Card 1 -->
+<div class="p-8 bg-surface-container-lowest border border-outline/10 rounded-DEFAULT relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary origin-top scale-y-0 group-hover:scale-y-100 transition-transform duration-500 ease-out"></div>
+<h3 class="font-label-sm text-on-surface-variant uppercase tracking-widest mb-6">Total Dispatches</h3>
+<div class="flex items-baseline gap-4">
+<span class="font-display-lg-mobile md:font-headline-lg text-primary leading-none">1,248</span>
+<span class="font-body-md text-secondary text-sm flex items-center"><span class="material-symbols-outlined text-[16px] mr-1">trending_up</span> +12%</span>
+</div>
+</div>
+<!-- Stat Card 2 -->
+<div class="p-8 bg-surface-container-lowest border border-outline/10 rounded-DEFAULT relative overflow-hidden group">
+<div class="absolute top-0 left-0 w-1 h-full bg-secondary origin-top scale-y-0 group-hover:scale-y-100 transition-transform duration-500 ease-out"></div>
+<h3 class="font-label-sm text-on-surface-variant uppercase tracking-widest mb-6">Pending Review</h3>
+<div class="flex items-baseline gap-4">
+<span class="font-display-lg-mobile md:font-headline-lg text-primary leading-none">42</span>
+<span class="font-body-md text-on-surface-variant text-sm">Action required</span>
+</div>
+</div>
+<!-- Stat Card 3 -->
+<div class="p-8 bg-primary text-on-primary rounded-DEFAULT relative overflow-hidden flex flex-col justify-between">
+<h3 class="font-label-sm text-on-primary/70 uppercase tracking-widest mb-6">Weekly Editorial</h3>
+<div>
+<span class="font-display-lg-mobile md:font-headline-lg leading-none block mb-2">Publishing</span>
+<p class="font-body-md text-on-primary/80 text-sm max-w-[200px]">3 major directives slated for release this Friday.</p>
+</div>
+</div>
+</section>
+<!-- Main Content Area: Activity Feed & Sidebar -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Editorial Activity Feed -->
+<section class="lg:col-span-8">
+<div class="flex items-center justify-between border-b border-outline/10 pb-4 mb-8">
+<h2 class="font-headline-md text-primary text-2xl">Recent Activity</h2>
+<button class="font-label-sm text-secondary uppercase tracking-widest hover:text-primary transition-colors flex items-center gap-1">
+                        Filter <span class="material-symbols-outlined text-[16px]">filter_list</span>
+</button>
+</div>
+<div class="space-y-0 divide-y divide-outline/10">
+<!-- Feed Item 1 -->
+<article class="py-8 group cursor-pointer">
+<div class="flex gap-6 items-start">
+<span class="font-label-sm text-on-surface-variant uppercase tracking-widest w-16 pt-1 shrink-0">10:42 AM</span>
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-1 bg-surface-container-high text-primary font-label-sm text-[10px] uppercase tracking-widest rounded-sm">Directive</span>
+<span class="font-body-md text-on-surface-variant text-sm">by Dr. Aris Thorne</span>
+</div>
+<h3 class="font-headline-md text-primary text-xl mb-3 group-hover:text-secondary transition-colors">Revised Curriculum Standards for Autumn Semester</h3>
+<p class="font-body-md text-on-surface-variant leading-relaxed mb-4 max-w-2xl">The faculty board has approved the new literature curriculum, integrating modern comparative studies with classical foundations. Immediate distribution required.</p>
+<div class="flex gap-4">
+<button class="font-label-sm text-primary uppercase tracking-widest hover:underline underline-offset-4">Review Document</button>
+</div>
+</div>
+</div>
+</article>
+<!-- Feed Item 2 -->
+<article class="py-8 group cursor-pointer">
+<div class="flex gap-6 items-start">
+<span class="font-label-sm text-on-surface-variant uppercase tracking-widest w-16 pt-1 shrink-0">Yesterday</span>
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-1 bg-error-container text-on-error-container font-label-sm text-[10px] uppercase tracking-widest rounded-sm">Urgent</span>
+<span class="font-body-md text-on-surface-variant text-sm">System Automated</span>
+</div>
+<h3 class="font-headline-md text-primary text-xl mb-3 group-hover:text-secondary transition-colors">Archive Server Synchronization Failure</h3>
+<p class="font-body-md text-on-surface-variant leading-relaxed max-w-2xl">Nightly backup for the central archives encountered an error during indexing. Technical support has been notified and is investigating.</p>
+</div>
+</div>
+</article>
+<!-- Feed Item 3 -->
+<article class="py-8 group cursor-pointer">
+<div class="flex gap-6 items-start">
+<span class="font-label-sm text-on-surface-variant uppercase tracking-widest w-16 pt-1 shrink-0">Oct 22</span>
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-2">
+<span class="px-2 py-1 bg-surface-container-high text-primary font-label-sm text-[10px] uppercase tracking-widest rounded-sm">Editorial</span>
+<span class="font-body-md text-on-surface-variant text-sm">by E. Vance</span>
+</div>
+<h3 class="font-headline-md text-primary text-xl mb-3 group-hover:text-secondary transition-colors">Draft Submission: The Future of Remote Pedagogy</h3>
+<p class="font-body-md text-on-surface-variant leading-relaxed max-w-2xl">Initial draft submitted for the quarterly review. Requires secondary proofing before final formatting.</p>
+</div>
+<img class="w-24 h-24 object-cover grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500 hidden sm:block" data-alt="A close-up, high-end editorial photograph of a textured, heavy stock paper document with elegant serif typography partially visible. The lighting is dramatic and moody, emphasizing the tactile quality of the paper. A sleek, minimalist black pen rests diagonally across the corner. The color palette is monochromatic with warm, subtle undertones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_tZ8aTrhNTYml6Y5VQxDuuMUw-De2XW8_I4MDYgQtrmOLBzDtB5UVZVP6Mr2mmmJOBYMMy72RQmAPouxneDqYU6WZOE3-7wEjnODJ_WY938958AShIVKLwbhSbljlBjP1LqWJAhvYy1p_yo6xVJIG9y2QscR1OH09MdWNk3cpDPjBPb13jA87yLBDgLXq3JvY-7cMY3CHDI7VNAyJ5ygd4rMRssI4Zx7PtghE7Rd4RiRKenxv4Lk7Cw"/>
+</div>
+</article>
+</div>
+</section>
+<!-- Secondary Context Column -->
+<aside class="lg:col-span-4 space-y-12">
+<!-- Quick Actions -->
+<div class="bg-surface-container-lowest border border-outline/10 p-6 rounded-DEFAULT">
+<h3 class="font-label-sm text-on-surface-variant uppercase tracking-widest mb-6 border-b border-outline/10 pb-2">Quick Actions</h3>
+<ul class="space-y-4">
+<li>
+<button class="w-full flex items-center justify-between text-left group">
+<span class="font-body-md text-primary group-hover:text-secondary transition-colors">Draft New Directive</span>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</li>
+<li>
+<button class="w-full flex items-center justify-between text-left group">
+<span class="font-body-md text-primary group-hover:text-secondary transition-colors">Manage Faculty Access</span>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</li>
+<li>
+<button class="w-full flex items-center justify-between text-left group">
+<span class="font-body-md text-primary group-hover:text-secondary transition-colors">Generate Weekly Report</span>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</li>
+</ul>
+</div>
+<!-- System Status -->
+<div>
+<h3 class="font-label-sm text-on-surface-variant uppercase tracking-widest mb-6 border-b border-outline/10 pb-2">System Status</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="font-body-md text-on-surface-variant text-sm">Dispatch Network</span>
+<span class="flex items-center gap-2 font-label-sm text-primary uppercase tracking-widest text-[10px]">
+<span class="w-2 h-2 rounded-full bg-primary block"></span> Online
+                            </span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-on-surface-variant text-sm">Archive Servers</span>
+<span class="flex items-center gap-2 font-label-sm text-error uppercase tracking-widest text-[10px]">
+<span class="w-2 h-2 rounded-full bg-error block animate-pulse"></span> Degraded
+                            </span>
+</div>
+<div class="flex justify-between items-center">
+<span class="font-body-md text-on-surface-variant text-sm">Faculty Portal</span>
+<span class="flex items-center gap-2 font-label-sm text-primary uppercase tracking-widest text-[10px]">
+<span class="w-2 h-2 rounded-full bg-primary block"></span> Online
+                            </span>
+</div>
+</div>
+</div>
+</aside>
+</div>
+</main>
+</body></html>

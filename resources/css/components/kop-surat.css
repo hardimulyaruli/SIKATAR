@@ -1,0 +1,18 @@
+.header-kop-container {
+  border-bottom: 4px double #0f172a;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  position: relative;
+  font-family: 'EB Garamond', Georgia, serif;
+}
+
+.kop-logo-badge {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 9999px;
+  background-color: #1e3a8a;
+  color: #ffffff;
+  border: 2px solid #fbbf24;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}

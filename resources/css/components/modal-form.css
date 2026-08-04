@@ -1,0 +1,51 @@
+.editorial-input-line {
+  width: 100%;
+  background: transparent;
+  border-width: 0 0 1px 0;
+  border-color: rgba(116, 120, 120, 0.25);
+  padding: 0.75rem 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.125rem;
+  color: #1a1c1c;
+  transition: border-color 0.2s ease-in-out;
+}
+
+.editorial-input-line:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: none;
+}
+
+.editorial-textarea {
+  width: 100%;
+  background-color: #f3f3f4;
+  border-radius: 0.5rem;
+  border: 0;
+  padding: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  color: #1a1c1c;
+  transition: all 0.2s ease-in-out;
+}
+
+.editorial-textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 1px #747878;
+}
+
+.editorial-button-primary {
+  background-color: #000000;
+  color: #ffffff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.editorial-button-primary:hover {
+  opacity: 0.9;
+}

@@ -1,0 +1,23 @@
+/* Modular Component CSS Imports */
+@import './components/glass-card.css';
+@import './components/stat-card.css';
+@import './components/kop-surat.css';
+@import './components/letter-preview.css';
+@import './components/badge-status.css';
+@import './components/sidebar-navbar.css';
+@import './components/table-pagination.css';
+@import './components/modal-form.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .font-serif-garamond {
+    font-family: 'EB Garamond', Georgia, serif;
+  }
+
+  .font-sans-inter {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
