@@ -25,7 +25,7 @@ export default function OperatorLayout({ children }) {
             <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
             <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarOpen ? 'md:ml-72' : 'ml-0'}`}>
                 <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-                <main className="flex-1 p-6 md:p-10 max-w-[1400px] w-full mx-auto">
+                <main className="flex-1 p-6 md:p-8 max-w-[1536px] w-full mx-auto">
                     {children}
                 </main>
             </div>

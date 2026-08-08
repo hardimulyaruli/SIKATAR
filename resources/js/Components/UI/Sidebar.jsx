@@ -11,7 +11,6 @@ export default function Sidebar({ isOpen = true, setIsOpen }) {
         { name: 'Dispatch (Dashboard)', href: '/operator/dashboard', icon: 'drafts' },
         { name: 'New Entry (Pengajuan)', href: '/operator/applications/create', icon: 'add_card' },
         { name: 'Archive (Daftar Surat)', href: '/operator/applications', icon: 'inventory_2' },
-        { name: 'Faculty & Kop Sekolah', href: '/operator/profile', icon: 'school' },
     ];
 
     const adminNav = [
@@ -21,6 +20,13 @@ export default function Sidebar({ isOpen = true, setIsOpen }) {
     ];
 
     const navItems = role === 'admin' ? adminNav : operatorNav;
+
+    const isRouteActive = (targetHref) => {
+        if (targetHref === '/operator/applications' || targetHref === '/admin/applications') {
+            return url === targetHref || (url.startsWith(targetHref) && !url.startsWith(targetHref + '/create'));
+        }
+        return url === targetHref || url.startsWith(targetHref + '?') || url.startsWith(targetHref + '/');
+    };
 
     return (
         <aside 
@@ -67,7 +73,7 @@ export default function Sidebar({ isOpen = true, setIsOpen }) {
                     {role === 'admin' ? 'Bureau Management' : 'Correspondence Menu'}
                 </p>
                 {navItems.map((item) => {
-                    const isActive = url.startsWith(item.href);
+                    const isActive = isRouteActive(item.href);
                     return (
                         <Link
                             key={item.name}

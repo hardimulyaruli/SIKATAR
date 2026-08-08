@@ -44,15 +44,19 @@ export default function Navbar({ role = 'operator', toggleSidebar }) {
                         <span className="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border border-surface"></span>
                     </button>
                     
-                    <div className="flex items-center gap-3 pl-3 border-l border-outline/10">
+                    <Link
+                        href={user?.role === 'admin' ? '/profile' : '/operator/profile'}
+                        className="flex items-center gap-3 pl-3 border-l border-outline/10 hover:opacity-80 transition-all cursor-pointer group"
+                        title="Profil Sekolah / Akun"
+                    >
                         <div className="text-right hidden sm:block">
-                            <p className="font-label-sm text-xs text-primary uppercase tracking-wider">{user?.name}</p>
+                            <p className="font-label-sm text-xs text-primary uppercase tracking-wider group-hover:text-primary-hover">{user?.name}</p>
                             <p className="font-body-md text-[10px] text-on-surface-variant capitalize">{user?.role === 'admin' ? 'Chief Administrator' : 'School Operator'}</p>
                         </div>
-                        <div className="w-8 h-8 rounded-full bg-primary text-on-primary font-bold text-xs flex items-center justify-center border border-outline/20">
+                        <div className="w-8 h-8 rounded-full bg-primary text-on-primary font-bold text-xs flex items-center justify-center border border-outline/20 shadow-xs group-hover:scale-105 transition-transform">
                             {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                         </div>
-                    </div>
+                    </Link>
                 </div>
             </div>
         </header>

@@ -51,6 +51,10 @@ class ApplicationController extends Controller
             'status' => 'required|in:submitted,under_review,revision_requested,approved,rejected',
             'admin_notes' => 'nullable|string',
             'official_letter_number' => 'nullable|string',
+            'received_date' => 'nullable|string',
+            'received_by_name' => 'nullable|string',
+            'received_by_title' => 'nullable|string',
+            'received_by_nip' => 'nullable|string',
         ]);
 
         $updateData = [
@@ -59,8 +63,25 @@ class ApplicationController extends Controller
         ];
 
         if ($request->status === 'approved') {
-            $updateData['official_letter_number'] = $request->official_letter_number ?? ('421/' . rand(100, 999) . '-Disdik/' . date('Y'));
+            if (!$request->filled('official_letter_number')) {
+                $template = \App\Models\LetterTemplate::where('code', $application->template_code)->first();
+                $classCode = $template->classification_code ?? '800.1.3.2';
+                $sequence = str_pad(rand(100, 9999), 4, '0', STR_PAD_LEFT);
+                $updateData['official_letter_number'] = "{$classCode}/{$sequence}-Sekre/" . date('Y');
+            } else {
+                $updateData['official_letter_number'] = $request->official_letter_number;
+            }
             $updateData['approved_at'] = now();
+
+            // Save verification receipt details in form_data_json
+            $formData = $application->form_data_json ?? [];
+            if ($request->filled('received_by_name') || $request->filled('received_date')) {
+                $formData['received_date'] = $request->received_date ?? date('d F Y');
+                $formData['received_by_name'] = $request->received_by_name;
+                $formData['received_by_title'] = $request->received_by_title;
+                $formData['received_by_nip'] = $request->received_by_nip;
+                $updateData['form_data_json'] = $formData;
+            }
         }
 
         $application->update($updateData);

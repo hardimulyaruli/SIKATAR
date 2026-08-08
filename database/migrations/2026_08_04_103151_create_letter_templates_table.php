@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('letter_templates', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique();
+            $table->string('classification_code')->default('800.1.3.2');
             $table->string('name');
             $table->string('category'); // Legalitas, Kepegawaian, Sarpras, Kesiswaan
             $table->text('description')->nullable();

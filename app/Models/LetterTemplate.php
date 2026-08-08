@@ -11,6 +11,7 @@ class LetterTemplate extends Model
 
     protected $fillable = [
         'code',
+        'classification_code',
         'name',
         'category',
         'description',
