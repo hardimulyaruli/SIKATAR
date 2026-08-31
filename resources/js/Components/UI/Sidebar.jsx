@@ -9,12 +9,14 @@ export default function Sidebar({ isOpen = true, setIsOpen }) {
 
     const operatorNav = [
         { name: 'Dispatch (Dashboard)', href: '/operator/dashboard', icon: 'drafts' },
+        { name: 'Personnel (Kepegawaian)', href: '/operator/employees', icon: 'badge' },
         { name: 'New Entry (Pengajuan)', href: '/operator/applications/create', icon: 'add_card' },
         { name: 'Archive (Daftar Surat)', href: '/operator/applications', icon: 'inventory_2' },
     ];
 
     const adminNav = [
         { name: 'Dispatch (Dashboard)', href: '/admin/dashboard', icon: 'drafts' },
+        { name: 'Personnel (Kepegawaian)', href: '/admin/employees', icon: 'badge' },
         { name: 'Directives (Pengajuan)', href: '/admin/applications', icon: 'gavel' },
         { name: 'Faculty (Sekolah KBB)', href: '/admin/schools', icon: 'school' },
     ];
