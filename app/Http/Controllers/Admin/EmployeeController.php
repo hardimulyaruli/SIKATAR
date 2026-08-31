@@ -65,7 +65,7 @@ class EmployeeController extends Controller
 
     public function show(Employee $employee)
     {
-        $employee->load(['school', 'jobHistories', 'assets', 'assessments', 'attendances', 'creditScores', 'leaves', 'documents']);
+        $employee->load(['school', 'jobHistories', 'educations', 'kgbs', 'assets', 'assessments', 'attendances', 'creditScores', 'leaves', 'documents']);
 
         return Inertia::render('Admin/Employees/Show', [
             'employee' => $employee
