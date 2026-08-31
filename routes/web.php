@@ -43,6 +43,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/applications', [AdminApplicationController::class, 'index'])->name('applications.index');
         Route::get('/applications/{application}', [AdminApplicationController::class, 'show'])->name('applications.show');
         Route::patch('/applications/{application}/status', [AdminApplicationController::class, 'updateStatus'])->name('applications.updateStatus');
+
+        // Employees Management
+        Route::resource('employees', \App\Http\Controllers\Admin\EmployeeController::class);
+        Route::post('/employees/{employee}/documents', [\App\Http\Controllers\Admin\EmployeeController::class, 'uploadDocument'])->name('employees.uploadDocument');
+        Route::delete('/employees/documents/{document}', [\App\Http\Controllers\Admin\EmployeeController::class, 'deleteDocument'])->name('employees.deleteDocument');
     });
 
     // Operator Sekolah Routes
@@ -59,6 +64,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/applications', [OperatorApplicationController::class, 'store'])->name('applications.store');
         Route::get('/applications/{application}', [OperatorApplicationController::class, 'show'])->name('applications.show');
         Route::put('/applications/{application}', [OperatorApplicationController::class, 'update'])->name('applications.update');
+
+        // Employees Management
+        Route::resource('employees', \App\Http\Controllers\Operator\EmployeeController::class);
+        Route::post('/employees/{employee}/documents', [\App\Http\Controllers\Operator\EmployeeController::class, 'uploadDocument'])->name('employees.uploadDocument');
+        Route::delete('/employees/documents/{document}', [\App\Http\Controllers\Operator\EmployeeController::class, 'deleteDocument'])->name('employees.deleteDocument');
     });
 });
 
