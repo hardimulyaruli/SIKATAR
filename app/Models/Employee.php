@@ -60,6 +60,16 @@ class Employee extends Model
         return $this->hasMany(EmployeeLeave::class);
     }
 
+    public function educations()
+    {
+        return $this->hasMany(EmployeeEducation::class);
+    }
+
+    public function kgbs()
+    {
+        return $this->hasMany(EmployeeKgb::class);
+    }
+
     public function documents()
     {
         return $this->hasMany(EmployeeDocument::class);
