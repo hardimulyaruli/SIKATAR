@@ -1,24 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '@/Components/UI/Sidebar';
 import Navbar from '@/Components/UI/Navbar';
 
 export default function OperatorLayout({ children }) {
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-
-    // Auto-close sidebar on small screens initially
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth < 768) {
-                setSidebarOpen(false);
-            } else {
-                setSidebarOpen(true);
-            }
-        };
-        
-        handleResize(); // Initial check
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
         <div className="min-h-screen bg-background text-on-background font-sans-inter antialiased flex flex-col md:flex-row overflow-x-hidden">
@@ -30,10 +15,10 @@ export default function OperatorLayout({ children }) {
                 </main>
             </div>
             
-            {/* Overlay for mobile when sidebar is open */}
+            {/* Overlay when sidebar is open */}
             {sidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-on-surface/20 z-40 md:hidden backdrop-blur-sm"
+                    className="fixed inset-0 bg-on-surface/20 z-40 backdrop-blur-sm"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
