@@ -27,11 +27,12 @@ export default function LiveLetterPreview({
     const handleDownloadPDF = async () => {
         if (!letterRef.current) return;
         try {
-            const pageElements = letterRef.current.querySelectorAll('.a4-page-section');
+            const pageElements = letterRef.current.querySelectorAll('.a4-page-section, .a4-landscape-page-section');
             const pdf = new jsPDF('p', 'mm', 'a4');
 
             for (let i = 0; i < pageElements.length; i++) {
                 const pageEl = pageElements[i];
+                const isLandscape = pageEl.classList.contains('a4-landscape-page-section');
                 const canvas = await html2canvas(pageEl, {
                     scale: 2,
                     useCORS: true,
@@ -39,9 +40,17 @@ export default function LiveLetterPreview({
                 });
                 const imgData = canvas.toDataURL('image/png');
                 if (i > 0) {
-                    pdf.addPage('a4', 'p');
+                    if (isLandscape) {
+                        pdf.addPage('a4', 'l');
+                    } else {
+                        pdf.addPage('a4', 'p');
+                    }
                 }
-                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                if (isLandscape) {
+                    pdf.addImage(imgData, 'PNG', 0, 0, 297, 210);
+                } else {
+                    pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                }
             }
             pdf.save(`${letterName.replace(/\s+/g, '_')}_${applicationNumber}.pdf`);
         } catch (err) {
@@ -60,30 +69,50 @@ export default function LiveLetterPreview({
     const displayLetterNumber = officialNumber || `${codeNumber}/1071 - Sekre/${new Date().getFullYear()}`;
 
     // Extract Applicants List
-    const applicantsList = Array.isArray(safeFormData.applicants) && safeFormData.applicants.length > 0
+    const baseApplicants = Array.isArray(safeFormData.applicants) && safeFormData.applicants.length > 0
         ? safeFormData.applicants
         : [
             {
-                nama: safeFormData.nama_pegawai || safeFormData.nama_guru || 'SUMIARSIH, S.Pd',
-                nip: safeFormData.nip || '196904061998022003',
-                gol_asal: safeFormData.pangkat_golongan || safeFormData.gol_asal || 'Pembina Tk.I, IV/b',
-                jabatan: safeFormData.jabatan || 'Guru Ahli Madya',
-                unit_kerja: safeFormData.unit_kerja || school?.name || 'SMPN 1 Batujajar',
-                kecamatan: safeFormData.kecamatan || 'Batujajar',
+                nama: safeFormData.nama_pegawai || safeFormData.nama_guru || '',
+                nip: safeFormData.nip || '',
+                gol_asal: safeFormData.pangkat_golongan || safeFormData.gol_asal || '',
+                jabatan: safeFormData.jabatan || '',
+                unit_kerja: safeFormData.unit_kerja || school?.name || '',
+                kecamatan: safeFormData.kecamatan || '',
             }
         ];
 
-    const totalCount = safeFormData.jumlah_orang || applicantsList.length;
+    const parsedJumlahBerkas = parseInt(safeFormData.jumlah_berkas, 10);
+    const totalCount = (!isNaN(parsedJumlahBerkas) && parsedJumlahBerkas > 0)
+        ? parsedJumlahBerkas
+        : (safeFormData.jumlah_orang || baseApplicants.length || 1);
+
     const terbilangText = terbilang(totalCount);
-    const firstApplicant = applicantsList[0];
-    const isMultiApplicant = applicantsList.length > 1;
+    const firstApplicant = baseApplicants[0] || {};
+    
+    // Construct display applicants list matching totalCount if count is higher
+    let displayApplicants = [...baseApplicants];
+    if (displayApplicants.length < totalCount) {
+        for (let i = displayApplicants.length; i < totalCount; i++) {
+            displayApplicants.push({
+                nama: '',
+                nip: '',
+                gol_asal: '',
+                jabatan: '',
+                unit_kerja: school?.name || '',
+                kecamatan: '',
+            });
+        }
+    }
+
+    const isMultiApplicant = totalCount >= 2 || displayApplicants.length > 1;
 
     // Dynamic Signee (Penandatangan Surat)
     const signeeTitle = isDisdik ? 'Plt. Kepala Dinas Pendidikan,' : (safeFormData.signee_title || 'Kepala Sekolah,');
     const signeeOrg = isDisdik ? 'Dinas Pendidikan' : (school?.name || 'SD NEGERI 1 PADALARANG');
-    const signeeName = isDisdik ? 'EDY SYAFRUDIN, S.Pd, M.Pd' : (safeFormData.signee_name || school?.headmaster_name || 'Sutisna, S.Pd.');
-    const signeePangkat = isDisdik ? 'Penata Tk.I' : (safeFormData.signee_pangkat || 'Pembina Tk. I');
-    const signeeNip = isDisdik ? '197111091994031004' : (safeFormData.signee_nip || school?.headmaster_nip || '19750918 200501 1 008');
+    const signeeName = isDisdik ? 'EDY SYAFRUDIN, S.Pd, M.Pd' : (safeFormData.signee_name || school?.headmaster_name || '...........................................');
+    const signeePangkat = isDisdik ? 'Penata Tk.I' : (safeFormData.signee_pangkat || '');
+    const signeeNip = isDisdik ? '197111091994031004' : (safeFormData.signee_nip || school?.headmaster_nip || '...........................................');
 
     return (
         <div className="relative flex flex-col items-center w-full">
@@ -141,7 +170,7 @@ export default function LiveLetterPreview({
                                 <tr>
                                     <td className="font-bold align-top">Yth.</td>
                                     <td colSpan={2} className="font-bold align-top leading-snug">
-                                        {recipient || 'Kepala Badan Kepegawaian dan\nPengembangan Sumber Daya Manusia\nKabupaten Bandung Barat'}
+                                        {recipient || 'Kepala Dinas Pendidikan Kabupaten Bandung Barat'}
                                     </td>
                                 </tr>
                                 <tr>
@@ -174,10 +203,10 @@ export default function LiveLetterPreview({
                         <table className="w-full border-collapse border border-black text-xs font-sans text-black">
                             <thead>
                                 <tr className="bg-white text-center font-bold border-b border-black">
-                                    <th className="border border-black p-1.5 w-[8%] text-center">No</th>
-                                    <th className="border border-black p-1.5 w-[52%] text-center">Naskah Dinas/Barang yang dikirim</th>
-                                    <th className="border border-black p-1.5 w-[18%] text-center">Banyaknya</th>
-                                    <th className="border border-black p-1.5 w-[22%] text-center">Keterangan</th>
+                                    <th className="border border-black p-1.5 w-[6%] text-center">No</th>
+                                    <th className="border border-black p-1.5 w-[50%] text-center">Naskah Dinas/Barang yang dikirim</th>
+                                    <th className="border border-black p-1.5 w-[16%] text-center">Banyaknya</th>
+                                    <th className="border border-black p-1.5 w-[28%] text-center">Keterangan</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -185,7 +214,7 @@ export default function LiveLetterPreview({
                                     <td className="border border-black p-1.5 text-center font-normal">1.</td>
                                     <td className="border border-black p-1.5 space-y-1">
                                         <p className="font-normal text-black leading-tight">
-                                            {subject || 'Usulan Kenaikan Pangkat Periode Agustus 2026 Pegawai Negeri Sipil/ Aparatur Sipil Negara, atas nama :'}
+                                            {subject || letterName || 'Surat Pengantar'}
                                         </p>
 
                                         {/* Applicant Summary */}
@@ -194,29 +223,29 @@ export default function LiveLetterPreview({
                                                 <tr>
                                                     <td className="w-20 font-normal align-top">Nama</td>
                                                     <td className="w-3 text-center align-top">:</td>
-                                                    <td className="font-bold align-top">{firstApplicant.nama}</td>
+                                                    <td className="font-bold align-top">{firstApplicant.nama || '...........................................'}</td>
                                                 </tr>
                                                 <tr>
                                                     <td className="font-normal align-top">NIP</td>
                                                     <td className="text-center align-top">:</td>
-                                                    <td className="align-top">{firstApplicant.nip}</td>
+                                                    <td className="align-top">{firstApplicant.nip || '...........................................'}</td>
                                                 </tr>
                                                 <tr>
                                                     <td className="font-normal align-top">Pangkat/Gol.</td>
                                                     <td className="text-center align-top">:</td>
-                                                    <td className="align-top">{firstApplicant.gol_asal || firstApplicant.pangkat || 'Pembina Tk.I, IV/b'}</td>
+                                                    <td className="align-top">{firstApplicant.gol_asal || firstApplicant.pangkat || '...........................................'}</td>
                                                 </tr>
                                                 <tr>
                                                     <td className="font-normal align-top">Jabatan</td>
                                                     <td className="text-center align-top">:</td>
-                                                    <td className="align-top">{firstApplicant.jabatan || 'Guru Ahli Madya'}</td>
+                                                    <td className="align-top">{firstApplicant.jabatan || '...........................................'}</td>
                                                 </tr>
                                                 <tr>
                                                     <td className="font-normal align-top">Unit Kerja</td>
                                                     <td className="text-center align-top">:</td>
                                                     <td className="align-top">
-                                                        {firstApplicant.unit_kerja || 'SMPN 1 Batujajar'}<br />
-                                                        Dinas Pendidikan<br />
+                                                        {firstApplicant.unit_kerja || school?.name || '...........................................'}<br />
+                                                        {school?.name ? 'Dinas Pendidikan' : ''}
                                                         {isMultiApplicant && (
                                                             <span className="font-bold uppercase">CS {totalCount} Orang</span>
                                                         )}
@@ -299,16 +328,16 @@ export default function LiveLetterPreview({
                     </div>
                 </div>
 
-                {/* PAGE 2: LAMPIRAN DATA PEMOHON (Exact Image 3 Format) */}
+                {/* PAGE 2: LAMPIRAN DATA PEMOHON (Landscape Format) */}
                 {isMultiApplicant && (
-                    <div className="a4-page-section paper-texture shadow-xl relative text-black leading-normal print:break-before-page">
+                    <div className="a4-landscape-page-section paper-texture shadow-xl relative text-black leading-normal print:break-before-page">
                         {/* Lampiran Header Title */}
                         <div className="text-center my-3 font-sans">
                             <h3 className="text-xs font-bold uppercase text-black tracking-wider">
                                 LAMPIRAN
                             </h3>
                             <h2 className="text-sm font-bold uppercase text-black tracking-wider mt-0.5">
-                                DATA USUL KENAIKAN PANGKAT PERIODE JULI 2026
+                                DATA USUL {(subject || letterName || 'BERKAS PENGAJUAN').toUpperCase()}
                             </h2>
                         </div>
 
@@ -317,25 +346,25 @@ export default function LiveLetterPreview({
                             <table className="w-full border-collapse border border-black text-[10px] font-sans text-black">
                                 <thead>
                                     <tr className="bg-slate-100 text-center font-bold border-b border-black">
-                                        <th className="border border-black p-1.5 w-8 text-center">NO</th>
-                                        <th className="border border-black p-1.5 text-left">NAMA</th>
-                                        <th className="border border-black p-1.5 text-center">NIP</th>
-                                        <th className="border border-black p-1.5 text-center">GOL ASAL</th>
-                                        <th className="border border-black p-1.5 text-left">JABATAN</th>
-                                        <th className="border border-black p-1.5 text-left">UNIT KERJA</th>
-                                        <th className="border border-black p-1.5 text-left">KECAMATAN</th>
+                                        <th className="border border-black p-1.5 w-[5%] text-center">NO</th>
+                                        <th className="border border-black p-1.5 w-[25%] text-left">NAMA</th>
+                                        <th className="border border-black p-1.5 w-[18%] text-center">NIP</th>
+                                        <th className="border border-black p-1.5 w-[12%] text-center">GOL ASAL</th>
+                                        <th className="border border-black p-1.5 w-[16%] text-left">JABATAN</th>
+                                        <th className="border border-black p-1.5 w-[14%] text-left">UNIT KERJA</th>
+                                        <th className="border border-black p-1.5 w-[10%] text-left">KECAMATAN</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {applicantsList.map((item, idx) => (
+                                    {displayApplicants.map((item, idx) => (
                                         <tr key={idx} className="border-b border-black align-top">
                                             <td className="border border-black p-1 text-center font-bold">{idx + 1}</td>
-                                            <td className="border border-black p-1 font-bold uppercase">{item.nama || '-'}</td>
-                                            <td className="border border-black p-1 text-center font-mono">{item.nip || '-'}</td>
-                                            <td className="border border-black p-1 text-center">{item.gol_asal || item.pangkat || '-'}</td>
-                                            <td className="border border-black p-1">{item.jabatan || '-'}</td>
-                                            <td className="border border-black p-1">{item.unit_kerja || '-'}</td>
-                                            <td className="border border-black p-1">{item.kecamatan || '-'}</td>
+                                            <td className="border border-black p-1 font-bold uppercase">{item.nama || '...........................................'}</td>
+                                            <td className="border border-black p-1 text-center font-mono">{item.nip || '...........................................'}</td>
+                                            <td className="border border-black p-1 text-center">{item.gol_asal || item.pangkat || '...................'}</td>
+                                            <td className="border border-black p-1">{item.jabatan || '...................'}</td>
+                                            <td className="border border-black p-1">{item.unit_kerja || school?.name || '...................'}</td>
+                                            <td className="border border-black p-1">{item.kecamatan || '...................'}</td>
                                         </tr>
                                     ))}
                                 </tbody>
