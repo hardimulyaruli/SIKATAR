@@ -1,10 +1,12 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 
 export default function Edit({ mustVerifyEmail, status }) {
+    const user = usePage().props.auth.user;
+
     return (
         <AuthenticatedLayout
             header={
@@ -28,19 +30,6 @@ export default function Edit({ mustVerifyEmail, status }) {
 
             <div className="py-8">
                 <div className="mx-auto max-w-7xl space-y-6 sm:px-6 lg:px-8">
-                    {/* Top Action Bar */}
-                    <div className="flex items-center justify-between bg-white p-4 shadow sm:rounded-lg border-l-4 border-blue-600">
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
-                            <span className="font-medium">Kelola informasi profil akun dan kata sandi Anda.</span>
-                        </div>
-                        <Link
-                            href={route('dashboard')}
-                            className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-all"
-                        >
-                            <span>← Kembali ke Dashboard</span>
-                        </Link>
-                    </div>
-
                     <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                         <UpdateProfileInformationForm
                             mustVerifyEmail={mustVerifyEmail}
@@ -51,10 +40,6 @@ export default function Edit({ mustVerifyEmail, status }) {
 
                     <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
                         <UpdatePasswordForm className="max-w-xl" />
-                    </div>
-
-                    <div className="bg-white p-4 shadow sm:rounded-lg sm:p-8">
-                        <DeleteUserForm className="max-w-xl" />
                     </div>
                 </div>
             </div>

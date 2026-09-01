@@ -16,7 +16,7 @@ Route::get('/', function () {
         $role = Auth::user()->role;
         return redirect($role === 'admin' ? '/admin/dashboard' : '/operator/dashboard');
     }
-    return Inertia::render('Welcome');
+    return redirect()->route('login');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -35,9 +35,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
         
-        // Schools
+        // Schools & Accounts Management
         Route::get('/schools', [AdminSchoolController::class, 'index'])->name('schools.index');
+        Route::post('/schools', [AdminSchoolController::class, 'store'])->name('schools.store');
         Route::get('/schools/{school}', [AdminSchoolController::class, 'show'])->name('schools.show');
+        Route::post('/schools/{school}/users', [AdminSchoolController::class, 'storeUser'])->name('schools.users.store');
 
         // Applications & Approval Workflow
         Route::get('/applications', [AdminApplicationController::class, 'index'])->name('applications.index');
