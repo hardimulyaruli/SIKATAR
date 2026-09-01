@@ -149,18 +149,20 @@ export default function ApplicationShow({ application, school }) {
                 </div>
 
                 {/* Right Side: High Fidelity Paper Preview (7 Cols) */}
-                <div className="lg:col-span-7 bg-surface-container-highest p-6 md:p-8 rounded-DEFAULT border border-outline/10 relative overflow-hidden flex justify-center">
-                    <LiveLetterPreview
-                        school={school}
-                        letterName={application.letter_name}
-                        applicationNumber={application.application_number}
-                        subject={data.subject}
-                        recipient={data.recipient}
-                        bodyContent={data.body_content}
-                        formData={data.form_data}
-                        officialNumber={application.official_letter_number}
-                        status={application.status}
-                    />
+                <div className="lg:col-span-7 bg-surface-container-highest p-4 md:p-6 rounded-DEFAULT border border-outline/10 relative overflow-x-auto flex flex-col items-center justify-start min-h-[600px]">
+                    <div className="w-full overflow-x-auto flex justify-start lg:justify-center py-2">
+                        <LiveLetterPreview
+                            school={school}
+                            letterName={application.letter_name}
+                            applicationNumber={application.application_number}
+                            subject={data.subject}
+                            recipient={data.recipient}
+                            bodyContent={data.body_content}
+                            formData={data.form_data}
+                            officialNumber={application.official_letter_number}
+                            status={application.status}
+                        />
+                    </div>
                 </div>
             </div>
         </OperatorLayout>
