@@ -3,10 +3,11 @@ import AdminLayout from '@/Layouts/AdminLayout';
 import PageHeader from '@/Components/UI/PageHeader';
 import GlassCard from '@/Components/UI/GlassCard';
 import { useForm, Link } from '@inertiajs/react';
-import { FiSave, FiX } from 'react-icons/fi';
+import { FiSave, FiX, FiUser } from 'react-icons/fi';
 
 export default function EmployeeEdit({ employee, schools }) {
-    const { data, setData, put, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
+        _method: 'put',
         school_id: employee.school_id || '',
         nip: employee.nip || '',
         name: employee.name || '',
@@ -17,18 +18,19 @@ export default function EmployeeEdit({ employee, schools }) {
         status_pegawai: employee.status_pegawai || 'PNS',
         cpns_date: employee.cpns_date || '',
         pns_date: employee.pns_date || '',
+        photo: null,
     });
 
     const submit = (e) => {
         e.preventDefault();
-        put(`/admin/employees/${employee.id}`);
+        post(`/admin/employees/${employee.id}`);
     };
 
     return (
         <AdminLayout>
             <PageHeader
                 title="Edit Pegawai"
-                subtitle="Perbarui data profil kepegawaian."
+                subtitle="Perbarui data profil dan pasfoto kepegawaian."
             />
 
             <div className="max-w-3xl">
@@ -36,6 +38,32 @@ export default function EmployeeEdit({ employee, schools }) {
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             
+                            {/* Pasfoto Pegawai */}
+                            <div className="space-y-2 md:col-span-2 bg-slate-50/70 p-4 rounded-xl border border-slate-100">
+                                <label className="block text-sm font-semibold text-slate-700">Pasfoto Resmi Pegawai (3x4)</label>
+                                <div className="flex items-center gap-4">
+                                    <div className="w-16 h-20 bg-slate-200 rounded-xl border-2 border-white ring-1 ring-slate-200 overflow-hidden flex items-center justify-center shrink-0">
+                                        {data.photo ? (
+                                            <img src={URL.createObjectURL(data.photo)} alt="Preview" className="w-full h-full object-cover" />
+                                        ) : employee.photo_path ? (
+                                            <img src={`/storage/${employee.photo_path}`} alt="Foto Saat Ini" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <FiUser className="w-8 h-8 text-slate-400" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <input
+                                            type="file"
+                                            accept="image/png, image/jpeg, image/jpg"
+                                            onChange={e => setData('photo', e.target.files[0])}
+                                            className="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                        />
+                                        <p className="text-[11px] text-slate-400 mt-1">Format JPG/PNG (Maks. 2MB). Disarankan rasio pasfoto 3x4.</p>
+                                    </div>
+                                </div>
+                                {errors.photo && <p className="text-red-500 text-xs mt-1">{errors.photo}</p>}
+                            </div>
+
                             {/* NIP */}
                             <div className="space-y-2">
                                 <label className="block text-sm font-semibold text-slate-700">NIP</label>
