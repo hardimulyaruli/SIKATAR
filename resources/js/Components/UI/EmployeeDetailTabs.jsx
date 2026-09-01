@@ -69,6 +69,34 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                         <h3 className="text-base font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
                             <FiUser className="text-blue-600" /> Informasi Pribadi
                         </h3>
+                        
+                        <div className="flex flex-col sm:flex-row gap-5 mb-5 items-center sm:items-start p-4 bg-slate-50/70 rounded-2xl border border-slate-100">
+                            <div className="w-28 h-36 rounded-xl overflow-hidden bg-slate-200 border-2 border-white ring-2 ring-blue-100 shadow-sm shrink-0 flex items-center justify-center relative">
+                                {employee.photo_path ? (
+                                    <img
+                                        src={`/storage/${employee.photo_path}`}
+                                        alt={employee.name}
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
+                                        <FiUser className="w-8 h-8 mb-1 text-slate-300" />
+                                        <span className="text-[10px] font-semibold text-slate-400 leading-tight">Pasfoto 3x4<br/>(Belum Ada)</span>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="space-y-1 text-center sm:text-left flex-1 self-center">
+                                {!employee.photo_path && (
+                                    <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-700 mb-1">
+                                        Belum Upload Pasfoto (3x4)
+                                    </span>
+                                )}
+                                <h4 className="font-bold text-slate-900 text-base leading-tight">{employee.name}</h4>
+                                <p className="text-xs text-slate-500 font-mono">NIP: {employee.nip || '-'}</p>
+                                <p className="text-xs text-slate-600 mt-1">Status: <span className="font-semibold text-blue-600">{employee.status_pegawai}</span></p>
+                            </div>
+                        </div>
+
                         <dl className="space-y-3.5 text-sm">
                             <div className="grid grid-cols-3 gap-2">
                                 <dt className="font-medium text-slate-500">Nama Lengkap</dt>
