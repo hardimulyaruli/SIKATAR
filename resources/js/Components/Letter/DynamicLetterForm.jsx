@@ -89,7 +89,7 @@ export default function DynamicLetterForm({
                     required
                     value={subject}
                     onChange={(e) => onSubjectChange(e.target.value)}
-                    placeholder="Usulan Kenaikan Pangkat Periode Agustus 2026 Pegawai Negeri Sipil/ Aparatur Sipil Negara, atas nama :"
+                    placeholder="Tuliskan Perihal / Judul Permohonan Surat..."
                     className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-xs"
                 />
             </div>
@@ -146,15 +146,15 @@ export default function DynamicLetterForm({
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                                <div>
+                                <div className="sm:col-span-2">
                                     <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Nama Lengkap & Gelar</label>
                                     <input
                                         type="text"
                                         required={idx === 0}
                                         value={item.nama || ''}
                                         onChange={(e) => updateApplicant(idx, 'nama', e.target.value)}
-                                        placeholder="SUMIARSIH, S.Pd"
-                                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
+                                        placeholder="Contoh: Budi Santoso, S.Pd"
+                                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold"
                                     />
                                 </div>
 
@@ -164,7 +164,7 @@ export default function DynamicLetterForm({
                                         type="text"
                                         value={item.nip || ''}
                                         onChange={(e) => updateApplicant(idx, 'nip', e.target.value)}
-                                        placeholder="196904061998022003"
+                                        placeholder="Contoh: 19800512 200604 1 005"
                                         className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
                                     />
                                 </div>
@@ -175,7 +175,7 @@ export default function DynamicLetterForm({
                                         type="text"
                                         value={item.gol_asal || ''}
                                         onChange={(e) => updateApplicant(idx, 'gol_asal', e.target.value)}
-                                        placeholder="Pembina Tk.I, IV/b"
+                                        placeholder="Contoh: Pembina Tk.I, IV/b"
                                         className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
                                     />
                                 </div>
@@ -186,7 +186,7 @@ export default function DynamicLetterForm({
                                         type="text"
                                         value={item.jabatan || ''}
                                         onChange={(e) => updateApplicant(idx, 'jabatan', e.target.value)}
-                                        placeholder="Guru Ahli Madya"
+                                        placeholder="Contoh: Guru Ahli Madya"
                                         className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
                                     />
                                 </div>
@@ -197,7 +197,7 @@ export default function DynamicLetterForm({
                                         type="text"
                                         value={item.unit_kerja || ''}
                                         onChange={(e) => updateApplicant(idx, 'unit_kerja', e.target.value)}
-                                        placeholder="SMPN 1 Batujajar"
+                                        placeholder="Contoh: SD Negeri 1 Padalarang"
                                         className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
                                     />
                                 </div>
@@ -208,7 +208,7 @@ export default function DynamicLetterForm({
                                         type="text"
                                         value={item.kecamatan || ''}
                                         onChange={(e) => updateApplicant(idx, 'kecamatan', e.target.value)}
-                                        placeholder="Batujajar"
+                                        placeholder="Contoh: Padalarang"
                                         className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
                                     />
                                 </div>
@@ -228,7 +228,7 @@ export default function DynamicLetterForm({
                     rows={4}
                     value={bodyContent}
                     onChange={(e) => onBodyChange(e.target.value)}
-                    placeholder="Usulan Kenaikan Pangkat Periode Agustus 2026 Pegawai Negeri Sipil/ Aparatur Sipil Negara..."
+                    placeholder="Tuliskan isi ringkas atau keterangan pokok surat..."
                     className="w-full px-3.5 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-xs"
                 />
             </div>
