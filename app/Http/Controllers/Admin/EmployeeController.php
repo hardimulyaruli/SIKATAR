@@ -45,7 +45,7 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'school_id' => 'required|exists:schools,id',
             'nip' => 'nullable|string|unique:employees,nip',
             'name' => 'required|string|max:255',
@@ -53,12 +53,17 @@ class EmployeeController extends Controller
             'date_of_birth' => 'nullable|date',
             'address' => 'nullable|string',
             'contact' => 'nullable|string|max:255',
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'status_pegawai' => 'required|in:PNS,CPNS,PPPK,Honorer',
             'cpns_date' => 'nullable|date',
             'pns_date' => 'nullable|date',
         ]);
 
-        Employee::create($request->all());
+        $employee = new Employee($validated);
+        if ($request->hasFile('photo')) {
+            $employee->photo_path = $request->file('photo')->store('employee_photos', 'public');
+        }
+        $employee->save();
 
         return redirect()->route('admin.employees.index')->with('success', 'Data pegawai berhasil ditambahkan.');
     }
@@ -83,7 +88,7 @@ class EmployeeController extends Controller
 
     public function update(Request $request, Employee $employee)
     {
-        $request->validate([
+        $validated = $request->validate([
             'school_id' => 'required|exists:schools,id',
             'nip' => 'nullable|string|unique:employees,nip,' . $employee->id,
             'name' => 'required|string|max:255',
@@ -91,12 +96,20 @@ class EmployeeController extends Controller
             'date_of_birth' => 'nullable|date',
             'address' => 'nullable|string',
             'contact' => 'nullable|string|max:255',
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'status_pegawai' => 'required|in:PNS,CPNS,PPPK,Honorer',
             'cpns_date' => 'nullable|date',
             'pns_date' => 'nullable|date',
         ]);
 
-        $employee->update($request->all());
+        if ($request->hasFile('photo')) {
+            if ($employee->photo_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($employee->photo_path);
+            }
+            $validated['photo_path'] = $request->file('photo')->store('employee_photos', 'public');
+        }
+
+        $employee->update($validated);
 
         return redirect()->route('admin.employees.show', $employee->id)->with('success', 'Data pegawai berhasil diperbarui.');
     }
