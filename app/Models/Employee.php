@@ -14,6 +14,7 @@ class Employee extends Model
         'date_of_birth',
         'address',
         'contact',
+        'photo_path',
         'status_pegawai',
         'cpns_date',
         'pns_date',
