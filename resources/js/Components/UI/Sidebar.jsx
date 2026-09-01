@@ -8,17 +8,17 @@ export default function Sidebar({ isOpen = true, setIsOpen }) {
     const role = user?.role || 'operator';
 
     const operatorNav = [
-        { name: 'Dispatch (Dashboard)', href: '/operator/dashboard', icon: 'drafts' },
-        { name: 'Personnel (Kepegawaian)', href: '/operator/employees', icon: 'badge' },
-        { name: 'New Entry (Pengajuan)', href: '/operator/applications/create', icon: 'add_card' },
-        { name: 'Archive (Daftar Surat)', href: '/operator/applications', icon: 'inventory_2' },
+        { name: 'Dashboard', href: '/operator/dashboard', icon: 'drafts' },
+        { name: 'Kepegawaian', href: '/operator/employees', icon: 'badge' },
+        { name: 'Pengajuan', href: '/operator/applications/create', icon: 'add_card' },
+        { name: 'Status Pengajuan', href: '/operator/applications', icon: 'inventory_2' },
     ];
 
     const adminNav = [
-        { name: 'Dispatch (Dashboard)', href: '/admin/dashboard', icon: 'drafts' },
-        { name: 'Personnel (Kepegawaian)', href: '/admin/employees', icon: 'badge' },
-        { name: 'Directives (Pengajuan)', href: '/admin/applications', icon: 'gavel' },
-        { name: 'Faculty (Sekolah KBB)', href: '/admin/schools', icon: 'school' },
+        { name: 'Dashboard', href: '/admin/dashboard', icon: 'drafts' },
+        { name: 'Kepegawaian', href: '/admin/employees', icon: 'badge' },
+        { name: 'Pengajuan', href: '/admin/applications', icon: 'gavel' },
+        { name: 'Sekolah KBB', href: '/admin/schools', icon: 'school' },
     ];
 
     const navItems = role === 'admin' ? adminNav : operatorNav;
@@ -51,10 +51,11 @@ export default function Sidebar({ isOpen = true, setIsOpen }) {
                         </p>
                     </div>
                 </div>
-                {/* Close Button for Mobile */}
+                {/* Close Button */}
                 <button 
-                    className="md:hidden text-on-surface-variant hover:text-primary p-1"
+                    className="text-on-surface-variant hover:text-primary p-1 cursor-pointer rounded-lg hover:bg-surface-container-low transition-colors"
                     onClick={() => setIsOpen(false)}
+                    title="Tutup Menu"
                 >
                     <Icon name="close" />
                 </button>
@@ -66,13 +67,13 @@ export default function Sidebar({ isOpen = true, setIsOpen }) {
                 className="mb-8 w-full py-3 px-4 bg-primary text-on-primary font-label-sm uppercase tracking-widest rounded-DEFAULT hover:bg-inverse-surface transition-colors flex items-center justify-center gap-2 text-xs font-semibold shadow-xs"
             >
                 <Icon name="add" className="text-on-primary text-lg" />
-                <span>{role === 'admin' ? 'Verifikasi Surat' : 'New Entry'}</span>
+                <span>{role === 'admin' ? 'Verifikasi Surat' : 'Pengajuan Baru'}</span>
             </Link>
 
             {/* Nav Links */}
             <nav className="flex-grow flex flex-col gap-1 font-label-sm text-xs uppercase tracking-widest overflow-y-auto">
                 <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 mb-2">
-                    {role === 'admin' ? 'Bureau Management' : 'Correspondence Menu'}
+                    {role === 'admin' ? 'Manajemen Dinas' : 'Menu Utama'}
                 </p>
                 {navItems.map((item) => {
                     const isActive = isRouteActive(item.href);
