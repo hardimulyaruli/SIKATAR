@@ -38,9 +38,10 @@ return [
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
-            'synchronous' => null,
+            // Konfigurasi performa SQLite: busy_timeout 30s & journal_mode WAL untuk cegah database lock
+            'busy_timeout' => 30000,
+            'journal_mode' => 'WAL',
+            'synchronous' => 'NORMAL',
             'transaction_mode' => 'DEFERRED',
         ],
 
