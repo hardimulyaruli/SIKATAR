@@ -53,7 +53,8 @@ export default function EmployeesIndex({ employees, schools, filters = {} }) {
                     filter={schoolId}
                     onFilterChange={handleSchoolFilter}
                     filterOptions={schoolOptions}
-                    placeholder="Cari nama pegawai, NIP..."
+                    filterLabel="Semua Sekolah"
+                    placeholder="Cari nama pegawai, NIP, atau nama sekolah..."
                 />
 
                 <div className="overflow-x-auto rounded-2xl border border-slate-200/80 bg-white/90 mt-4">
