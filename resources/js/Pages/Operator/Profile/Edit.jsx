@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import OperatorLayout from '@/Layouts/OperatorLayout';
 import PageHeader from '@/Components/UI/PageHeader';
 import GlassCard from '@/Components/UI/GlassCard';
+import HeaderKopSurat from '@/Components/Letter/HeaderKopSurat';
 import { useForm, Link } from '@inertiajs/react';
 import { FiSave, FiUpload, FiHome, FiUser, FiCheckCircle } from 'react-icons/fi';
 
@@ -20,6 +21,12 @@ export default function ProfileEdit({ school }) {
     });
 
     const [previewLogo, setPreviewLogo] = useState(school?.logo_kop_path || null);
+
+    useEffect(() => {
+        if (school?.logo_kop_path) {
+            setPreviewLogo(school.logo_kop_path);
+        }
+    }, [school?.logo_kop_path]);
 
     const handleLogoChange = (e) => {
         const file = e.target.files[0];
@@ -231,6 +238,21 @@ export default function ProfileEdit({ school }) {
                             </button>
                         </div>
                     </form>
+                </GlassCard>
+
+                {/* Pratinjau Live Kop Surat Sekolah */}
+                <GlassCard header={<h3 className="font-bold text-slate-900 text-sm flex items-center gap-2"><FiHome className="w-4 h-4 text-blue-600" /> Pratinjau Hasil Kop Surat Resmi Sekolah</h3>}>
+                    <div className="p-4 bg-slate-100/70 rounded-xl border border-slate-200/80 overflow-x-auto">
+                        <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 max-w-[800px] mx-auto pointer-events-none">
+                            <HeaderKopSurat school={{
+                                name: data.name || school?.name,
+                                address: data.address || school?.address,
+                                phone: data.phone || school?.phone,
+                                email: data.email || school?.email,
+                                logo_kop_path: previewLogo
+                            }} />
+                        </div>
+                    </div>
                 </GlassCard>
             </div>
         </OperatorLayout>
