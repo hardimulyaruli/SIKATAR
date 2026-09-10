@@ -1,14 +1,50 @@
 import React, { useState } from 'react';
 import GlassCard from '@/Components/UI/GlassCard';
+import { router } from '@inertiajs/react';
 import { 
     FiUser, FiAward, FiClock, FiBox, FiCheckSquare, 
     FiCalendar, FiFileText, FiLayers, FiBookOpen, 
-    FiBriefcase, FiTrendingUp, FiCheckCircle
+    FiBriefcase, FiTrendingUp, FiCheckCircle, FiCamera, FiUpload
 } from 'react-icons/fi';
+
+const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    const cleanPath = path.startsWith('/storage/') ? path.replace('/storage/', '') : (path.startsWith('storage/') ? path.replace('storage/', '') : path);
+    return `/storage/${cleanPath}`;
+};
 
 export default function EmployeeDetailTabs({ employee, isAdmin = false, onUploadDocument, onDeleteDocument }) {
     const [activeTab, setActiveTab] = useState('profile');
     const [activeRiwayatSubTab, setActiveRiwayatSubTab] = useState('golongan');
+    const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+    const handlePhotoUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setUploadingPhoto(true);
+
+        const routeUrl = isAdmin ? `/admin/employees/${employee.id}` : `/operator/employees/${employee.id}`;
+
+        router.post(routeUrl, {
+            _method: 'put',
+            name: employee.name || '',
+            nip: employee.nip || '',
+            status_pegawai: employee.status_pegawai || 'PNS',
+            school_id: employee.school_id || '',
+            place_of_birth: employee.place_of_birth || '',
+            date_of_birth: employee.date_of_birth || '',
+            address: employee.address || '',
+            contact: employee.contact || '',
+            cpns_date: employee.cpns_date || '',
+            pns_date: employee.pns_date || '',
+            photo: file,
+        }, {
+            preserveScroll: true,
+            forceFormData: true,
+            onFinish: () => setUploadingPhoto(false),
+        });
+    };
 
     const topTabs = [
         { id: 'profile', label: 'Profile', icon: FiUser },
@@ -71,10 +107,10 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                         </h3>
                         
                         <div className="flex flex-col sm:flex-row gap-5 mb-5 items-center sm:items-start p-4 bg-slate-50/70 rounded-2xl border border-slate-100">
-                            <div className="w-28 h-36 rounded-xl overflow-hidden bg-slate-200 border-2 border-white ring-2 ring-blue-100 shadow-sm shrink-0 flex items-center justify-center relative">
+                            <div className="w-28 h-36 rounded-xl overflow-hidden bg-slate-200 border-2 border-white ring-2 ring-blue-100 shadow-sm shrink-0 flex items-center justify-center relative group">
                                 {employee.photo_path ? (
                                     <img
-                                        src={`/storage/${employee.photo_path}`}
+                                        src={getImageUrl(employee.photo_path)}
                                         alt={employee.name}
                                         className="w-full h-full object-cover"
                                     />
@@ -84,8 +120,22 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                                         <span className="text-[10px] font-semibold text-slate-400 leading-tight">Pasfoto 3x4<br/>(Belum Ada)</span>
                                     </div>
                                 )}
+
+                                {/* Overlay Upload Trigger */}
+                                <label className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white cursor-pointer p-1 text-center">
+                                    <FiCamera className="w-5 h-5 mb-1" />
+                                    <span className="text-[9px] font-bold">{uploadingPhoto ? 'Mengunggah...' : 'Ganti Pasfoto'}</span>
+                                    <input
+                                        type="file"
+                                        accept="image/png, image/jpeg, image/jpg"
+                                        onChange={handlePhotoUpload}
+                                        disabled={uploadingPhoto}
+                                        className="hidden"
+                                    />
+                                </label>
                             </div>
-                            <div className="space-y-1 text-center sm:text-left flex-1 self-center">
+
+                            <div className="space-y-2 text-center sm:text-left flex-1 self-center">
                                 {!employee.photo_path && (
                                     <span className="inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-700 mb-1">
                                         Belum Upload Pasfoto (3x4)
@@ -93,7 +143,19 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                                 )}
                                 <h4 className="font-bold text-slate-900 text-base leading-tight">{employee.name}</h4>
                                 <p className="text-xs text-slate-500 font-mono">NIP: {employee.nip || '-'}</p>
-                                <p className="text-xs text-slate-600 mt-1">Status: <span className="font-semibold text-blue-600">{employee.status_pegawai}</span></p>
+                                <p className="text-xs text-slate-600">Status: <span className="font-semibold text-blue-600">{employee.status_pegawai}</span></p>
+
+                                <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-semibold cursor-pointer border border-blue-200 transition-colors shadow-xs">
+                                    <FiUpload className="w-3.5 h-3.5" />
+                                    <span>{uploadingPhoto ? 'Mengunggah...' : (employee.photo_path ? 'Ganti Pasfoto (3x4)' : 'Unggah Pasfoto (3x4)')}</span>
+                                    <input
+                                        type="file"
+                                        accept="image/png, image/jpeg, image/jpg"
+                                        onChange={handlePhotoUpload}
+                                        disabled={uploadingPhoto}
+                                        className="hidden"
+                                    />
+                                </label>
                             </div>
                         </div>
 
