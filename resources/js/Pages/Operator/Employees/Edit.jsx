@@ -5,6 +5,13 @@ import GlassCard from '@/Components/UI/GlassCard';
 import { useForm, Link } from '@inertiajs/react';
 import { FiSave, FiX, FiUser } from 'react-icons/fi';
 
+const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    const cleanPath = path.startsWith('/storage/') ? path.replace('/storage/', '') : (path.startsWith('storage/') ? path.replace('storage/', '') : path);
+    return `/storage/${cleanPath}`;
+};
+
 export default function EmployeeEdit({ employee }) {
     const { data, setData, post, processing, errors } = useForm({
         _method: 'put',
@@ -22,7 +29,9 @@ export default function EmployeeEdit({ employee }) {
 
     const submit = (e) => {
         e.preventDefault();
-        post(`/operator/employees/${employee.id}`);
+        post(`/operator/employees/${employee.id}`, {
+            forceFormData: true,
+        });
     };
 
     return (
@@ -45,7 +54,7 @@ export default function EmployeeEdit({ employee }) {
                                         {data.photo ? (
                                             <img src={URL.createObjectURL(data.photo)} alt="Preview" className="w-full h-full object-cover" />
                                         ) : employee.photo_path ? (
-                                            <img src={`/storage/${employee.photo_path}`} alt="Foto Saat Ini" className="w-full h-full object-cover" />
+                                            <img src={getImageUrl(employee.photo_path)} alt="Foto Saat Ini" className="w-full h-full object-cover" />
                                         ) : (
                                             <FiUser className="w-8 h-8 text-slate-400" />
                                         )}
