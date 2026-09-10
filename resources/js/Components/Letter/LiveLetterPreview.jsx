@@ -89,7 +89,23 @@ export default function LiveLetterPreview({
 
     const terbilangText = terbilang(totalCount);
     const firstApplicant = baseApplicants[0] || {};
-    
+
+    // Filter custom dynamic fields from safeFormData (excluding control & applicant fields)
+    const ignoredKeys = new Set([
+        'applicants', 'jumlah_berkas', 'jumlah_orang',
+        'nama_pegawai', 'nama_guru', 'nip', 'pangkat_golongan',
+        'gol_asal', 'jabatan', 'unit_kerja', 'kecamatan',
+        'received_date', 'received_by_name', 'received_by_title', 'received_by_nip'
+    ]);
+
+    const customParams = Object.entries(safeFormData).filter(
+        ([key, val]) => !ignoredKeys.has(key) && val !== null && val !== undefined && val !== ''
+    );
+
+    const hasApplicantInfo = Boolean(
+        firstApplicant.nama || firstApplicant.nip || firstApplicant.gol_asal || firstApplicant.jabatan
+    );
+
     // Construct display applicants list matching totalCount if count is higher
     let displayApplicants = [...baseApplicants];
     if (displayApplicants.length < totalCount) {
@@ -169,7 +185,7 @@ export default function LiveLetterPreview({
                                 </tr>
                                 <tr>
                                     <td className="font-bold align-top">Yth.</td>
-                                    <td colSpan={2} className="font-bold align-top leading-snug">
+                                    <td colSpan={2} className="font-bold align-top leading-snug whitespace-pre-line">
                                         {recipient || 'Kepala Dinas Pendidikan Kabupaten Bandung Barat'}
                                     </td>
                                 </tr>
@@ -212,47 +228,79 @@ export default function LiveLetterPreview({
                             <tbody>
                                 <tr className="align-top">
                                     <td className="border border-black p-1.5 text-center font-normal">1.</td>
-                                    <td className="border border-black p-1.5 space-y-1">
-                                        <p className="font-normal text-black leading-tight">
+                                    <td className="border border-black p-1.5 space-y-1.5">
+                                        <p className="font-bold text-black leading-tight">
                                             {subject || letterName || 'Surat Pengantar'}
                                         </p>
 
-                                        {/* Applicant Summary */}
-                                        <table className="w-full text-xs text-black border-collapse mt-1 leading-tight">
-                                            <tbody>
-                                                <tr>
-                                                    <td className="w-20 font-normal align-top">Nama</td>
-                                                    <td className="w-3 text-center align-top">:</td>
-                                                    <td className="font-bold align-top">{firstApplicant.nama || '...........................................'}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="font-normal align-top">NIP</td>
-                                                    <td className="text-center align-top">:</td>
-                                                    <td className="align-top">{firstApplicant.nip || '...........................................'}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="font-normal align-top">Pangkat/Gol.</td>
-                                                    <td className="text-center align-top">:</td>
-                                                    <td className="align-top">{firstApplicant.gol_asal || firstApplicant.pangkat || '...........................................'}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="font-normal align-top">Jabatan</td>
-                                                    <td className="text-center align-top">:</td>
-                                                    <td className="align-top">{firstApplicant.jabatan || '...........................................'}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="font-normal align-top">Unit Kerja</td>
-                                                    <td className="text-center align-top">:</td>
-                                                    <td className="align-top">
-                                                        {firstApplicant.unit_kerja || school?.name || '...........................................'}<br />
-                                                        {school?.name ? 'Dinas Pendidikan' : ''}
-                                                        {isMultiApplicant && (
-                                                            <span className="font-bold uppercase">CS {totalCount} Orang</span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        {/* Body Content / Narasi Surat Pengantar */}
+                                        {bodyContent && (
+                                            <div className="text-xs text-slate-900 leading-normal whitespace-pre-line py-1 border-t border-slate-200 mt-1">
+                                                {bodyContent}
+                                            </div>
+                                        )}
+
+                                        {/* Custom Template Parameters (e.g. Bantuan Sarpras, Mutasi, Izin Ops, Cuti, etc.) */}
+                                        {customParams.length > 0 && (
+                                            <table className="w-full text-xs text-black border-collapse mt-1 leading-tight">
+                                                <tbody>
+                                                    {customParams.map(([key, val]) => (
+                                                        <tr key={key}>
+                                                            <td className="w-32 font-normal capitalize align-top">{key.replace(/_/g, ' ')}</td>
+                                                            <td className="w-3 text-center align-top">:</td>
+                                                            <td className="font-semibold align-top">{val}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        )}
+
+                                        {/* Applicant Summary (if applicant info exists) */}
+                                        {hasApplicantInfo && (
+                                            <table className="w-full text-xs text-black border-collapse mt-1.5 leading-tight border-t border-slate-200 pt-1">
+                                                <tbody>
+                                                    {firstApplicant.nama && (
+                                                        <tr>
+                                                            <td className="w-20 font-normal align-top">Nama</td>
+                                                            <td className="w-3 text-center align-top">:</td>
+                                                            <td className="font-bold align-top">{firstApplicant.nama}</td>
+                                                        </tr>
+                                                    )}
+                                                    {firstApplicant.nip && (
+                                                        <tr>
+                                                            <td className="font-normal align-top">NIP</td>
+                                                            <td className="text-center align-top">:</td>
+                                                            <td className="align-top">{firstApplicant.nip}</td>
+                                                        </tr>
+                                                    )}
+                                                    {(firstApplicant.gol_asal || firstApplicant.pangkat) && (
+                                                        <tr>
+                                                            <td className="font-normal align-top">Pangkat/Gol.</td>
+                                                            <td className="text-center align-top">:</td>
+                                                            <td className="align-top">{firstApplicant.gol_asal || firstApplicant.pangkat}</td>
+                                                        </tr>
+                                                    )}
+                                                    {firstApplicant.jabatan && (
+                                                        <tr>
+                                                            <td className="font-normal align-top">Jabatan</td>
+                                                            <td className="text-center align-top">:</td>
+                                                            <td className="align-top">{firstApplicant.jabatan}</td>
+                                                        </tr>
+                                                    )}
+                                                    <tr>
+                                                        <td className="font-normal align-top">Unit Kerja</td>
+                                                        <td className="text-center align-top">:</td>
+                                                        <td className="align-top">
+                                                            {firstApplicant.unit_kerja || school?.name || '...........................................'}<br />
+                                                            {school?.name ? 'Dinas Pendidikan' : ''}
+                                                            {isMultiApplicant && (
+                                                                <span className="font-bold uppercase ml-1">CS {totalCount} Orang</span>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        )}
                                     </td>
                                     <td className="border border-black p-1.5 text-center font-normal leading-tight align-top">
                                         <div className="font-bold text-xs">{totalCount}</div>
