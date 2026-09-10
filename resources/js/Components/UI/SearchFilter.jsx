@@ -7,7 +7,8 @@ export default function SearchFilter({
     filter, 
     onFilterChange, 
     filterOptions = [], 
-    placeholder = 'Cari...' 
+    placeholder = 'Cari...',
+    filterLabel = 'Semua Filter'
 }) {
     return (
         <div className="flex flex-col sm:flex-row gap-3 items-center justify-between mb-6">
@@ -29,7 +30,7 @@ export default function SearchFilter({
                         onChange={(e) => onFilterChange(e.target.value)}
                         className="w-full sm:w-56 pl-10 pr-8 py-2.5 bg-white/80 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm appearance-none cursor-pointer"
                     >
-                        <option value="">Semua Status / Category</option>
+                        <option value="">{filterLabel}</option>
                         {filterOptions.map((opt) => (
                             <option key={opt.value} value={opt.value}>
                                 {opt.label}
