@@ -12,26 +12,38 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
+        // Query data pegawai beserta relasi sekolah
         $query = Employee::with('school');
 
+        // Filter pencarian berdasarkan nama pegawai, NIP, atau nama sekolah
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('nip', 'like', '%' . $request->search . '%');
+                  ->orWhere('nip', 'like', '%' . $request->search . '%')
+                  ->orWhereHas('school', function ($sq) use ($request) {
+                      $sq->where('name', 'like', '%' . $request->search . '%');
+                  });
             });
         }
 
+        // Filter spesifik berdasarkan ID sekolah
         if ($request->filled('school_id')) {
             $query->where('school_id', $request->school_id);
         }
 
-        $employees = $query->latest()->paginate(10)->withQueryString();
-        $schools = School::orderBy('name')->get();
+        // Filter spesifik berdasarkan status kepegawaian (PNS, PPPK, Honorer)
+        if ($request->filled('status_pegawai')) {
+            $query->where('status_pegawai', $request->status_pegawai);
+        }
+
+        // Pengurutan berbasis indeks ID dan pagination 15 data per halaman
+        $employees = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
+        $schools = School::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('Admin/Employees/Index', [
             'employees' => $employees,
             'schools' => $schools,
-            'filters' => $request->only(['search', 'school_id']),
+            'filters' => $request->only(['search', 'school_id', 'status_pegawai']),
         ]);
     }
 
@@ -104,10 +116,14 @@ class EmployeeController extends Controller
 
         if ($request->hasFile('photo')) {
             if ($employee->photo_path) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($employee->photo_path);
+                $oldDiskPath = str_replace('/storage/', '', $employee->photo_path);
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldDiskPath)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldDiskPath);
+                }
             }
             $validated['photo_path'] = $request->file('photo')->store('employee_photos', 'public');
         }
+        unset($validated['photo']);
 
         $employee->update($validated);
 
