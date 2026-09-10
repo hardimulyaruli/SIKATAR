@@ -36,6 +36,17 @@
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  html, body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   body * {
     visibility: hidden;
   }
@@ -46,23 +57,29 @@
     position: absolute;
     left: 0;
     top: 0;
-    width: 210mm;
+    width: 100%;
     margin: 0;
     padding: 0;
     box-shadow: none;
   }
   .a4-page-section {
+    width: 210mm;
+    min-height: 297mm;
     page-break-after: always;
     page-break-inside: avoid;
-    box-shadow: none;
-    margin: 0;
+    box-shadow: none !important;
+    margin: 0 auto;
     padding: 15mm 20mm;
+    box-sizing: border-box;
   }
   .a4-landscape-page-section {
+    width: 297mm;
+    min-height: 210mm;
     page-break-before: always;
     page-break-inside: avoid;
-    box-shadow: none;
-    margin: 0;
+    box-shadow: none !important;
+    margin: 0 auto;
     padding: 15mm 20mm;
+    box-sizing: border-box;
   }
 }
