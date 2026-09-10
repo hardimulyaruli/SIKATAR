@@ -12,10 +12,17 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
+        // Jika user yang login adalah Admin, arahkan otomatis ke halaman pegawai Admin
+        if (Auth::user()->role === 'admin') {
+            return redirect()->route('admin.employees.index');
+        }
+
         $school = Auth::user()->school;
 
+        // Query data pegawai khusus untuk sekolah operator tersebut
         $query = Employee::with('school')->where('school_id', $school->id ?? 0);
 
+        // Filter pencarian berdasarkan nama pegawai atau NIP
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
@@ -23,7 +30,8 @@ class EmployeeController extends Controller
             });
         }
 
-        $employees = $query->latest()->paginate(10)->withQueryString();
+        // Pengurutan berbasis indeks ID dan pagination 15 data per halaman
+        $employees = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
         return Inertia::render('Operator/Employees/Index', [
             'employees' => $employees,
@@ -104,10 +112,14 @@ class EmployeeController extends Controller
 
         if ($request->hasFile('photo')) {
             if ($employee->photo_path) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($employee->photo_path);
+                $oldDiskPath = str_replace('/storage/', '', $employee->photo_path);
+                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldDiskPath)) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldDiskPath);
+                }
             }
             $validated['photo_path'] = $request->file('photo')->store('employee_photos', 'public');
         }
+        unset($validated['photo']);
 
         $employee->update($validated);
 
