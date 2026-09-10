@@ -42,8 +42,11 @@ class SchoolProfileController extends Controller
         ]);
 
         if ($request->hasFile('logo')) {
-            if ($school->logo_kop_path && Storage::disk('public')->exists($school->logo_kop_path)) {
-                Storage::disk('public')->delete($school->logo_kop_path);
+            if ($school->logo_kop_path) {
+                $oldDiskPath = str_replace('/storage/', '', $school->logo_kop_path);
+                if (Storage::disk('public')->exists($oldDiskPath)) {
+                    Storage::disk('public')->delete($oldDiskPath);
+                }
             }
             $path = $request->file('logo')->store('logos', 'public');
             $data['logo_kop_path'] = '/storage/' . $path;
