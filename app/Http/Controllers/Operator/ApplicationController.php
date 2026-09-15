@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Operator;
 use App\Http\Controllers\Controller;
 use App\Models\LetterApplication;
 use App\Models\LetterTemplate;
+use App\Models\User;
+use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -87,6 +89,17 @@ class ApplicationController extends Controller
             'status' => 'submitted',
         ]);
 
+        // Notify Admin Users
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new ApplicationNotification([
+                'title' => 'Pengajuan Surat Baru',
+                'message' => "{$school->name} mengajukan {$application->letter_name} ({$appNumber}).",
+                'url' => "/admin/applications/{$application->id}",
+                'type' => 'submitted',
+            ]));
+        }
+
         return redirect()->route('operator.applications.show', $application->id)
             ->with('success', 'Pengajuan surat berhasil dikirim ke Dinas Pendidikan KBB.');
     }
@@ -121,6 +134,17 @@ class ApplicationController extends Controller
             'status' => 'submitted',
             'admin_notes' => null,
         ]);
+
+        // Notify Admin Users
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new ApplicationNotification([
+                'title' => 'Perbaikan Pengajuan Terkirim',
+                'message' => "{$application->school->name} telah mengunggah perbaikan untuk {$application->application_number}.",
+                'url' => "/admin/applications/{$application->id}",
+                'type' => 'submitted',
+            ]));
+        }
 
         return redirect()->back()->with('success', 'Perbaikan pengajuan surat berhasil dikirim ulang.');
     }

@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\LetterApplication;
+use App\Models\User;
+use App\Notifications\ApplicationNotification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -85,6 +87,36 @@ class ApplicationController extends Controller
         }
 
         $application->update($updateData);
+
+        // Notify Operator Users of the School
+        $statusText = match($request->status) {
+            'approved' => 'DISETUJUI',
+            'revision_requested' => 'MEMERLUKAN REVISI',
+            'rejected' => 'DITOLAK',
+            default => 'DIPROSES',
+        };
+
+        $type = match($request->status) {
+            'approved' => 'approved',
+            'revision_requested' => 'revision',
+            'rejected' => 'rejected',
+            default => 'info',
+        };
+
+        $message = "Pengajuan {$application->application_number} telah {$statusText}.";
+        if ($request->filled('admin_notes')) {
+            $message .= " Catatan: {$request->admin_notes}";
+        }
+
+        $operators = User::where('school_id', $application->school_id)->get();
+        foreach ($operators as $op) {
+            $op->notify(new ApplicationNotification([
+                'title' => "Pengajuan Surat {$statusText}",
+                'message' => $message,
+                'url' => "/operator/applications/{$application->id}",
+                'type' => $type,
+            ]));
+        }
 
         return redirect()->back()->with('success', 'Status pengajuan berhasil diperbarui.');
     }

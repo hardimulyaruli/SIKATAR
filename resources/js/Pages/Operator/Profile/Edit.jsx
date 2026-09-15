@@ -6,6 +6,8 @@ import HeaderKopSurat from '@/Components/Letter/HeaderKopSurat';
 import { useForm, Link } from '@inertiajs/react';
 import { FiSave, FiUpload, FiHome, FiUser, FiCheckCircle } from 'react-icons/fi';
 
+import { getImageUrl } from '@/Components/Letter/HeaderKopSurat';
+
 export default function ProfileEdit({ school }) {
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
         name: school?.name || '',
@@ -18,21 +20,37 @@ export default function ProfileEdit({ school }) {
         headmaster_name: school?.headmaster_name || '',
         headmaster_nip: school?.headmaster_nip || '',
         logo: null,
+        signature: null,
     });
 
-    const [previewLogo, setPreviewLogo] = useState(school?.logo_kop_path || null);
+    const [previewLogo, setPreviewLogo] = useState(school?.logo_kop_path ? getImageUrl(school.logo_kop_path) : null);
+    const [previewSignature, setPreviewSignature] = useState(school?.signature_path ? getImageUrl(school.signature_path) : null);
 
     useEffect(() => {
         if (school?.logo_kop_path) {
-            setPreviewLogo(school.logo_kop_path);
+            setPreviewLogo(getImageUrl(school.logo_kop_path));
         }
     }, [school?.logo_kop_path]);
+
+    useEffect(() => {
+        if (school?.signature_path) {
+            setPreviewSignature(getImageUrl(school.signature_path));
+        }
+    }, [school?.signature_path]);
 
     const handleLogoChange = (e) => {
         const file = e.target.files[0];
         if (file) {
             setData('logo', file);
             setPreviewLogo(URL.createObjectURL(file));
+        }
+    };
+
+    const handleSignatureChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setData('signature', file);
+            setPreviewSignature(URL.createObjectURL(file));
         }
     };
 
@@ -223,6 +241,33 @@ export default function ProfileEdit({ school }) {
                                         className="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                     />
                                     <p className="text-[10px] text-slate-400 mt-1">Format PNG / JPG (Maks. 2MB). Disarankan berlatar belakang transparan.</p>
+                                    {errors.logo && <p className="text-[11px] text-rose-500 mt-1">{errors.logo}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Upload Sampel Tanda Tangan Basah */}
+                        <div className="pt-2 border-t border-slate-100">
+                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                                Upload Sampel Tanda Tangan Basah Kepala Sekolah:
+                            </label>
+                            <div className="flex items-center gap-4">
+                                <div className="w-24 h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 p-1">
+                                    {previewSignature ? (
+                                        <img src={previewSignature} alt="Sampel TTD Basah Preview" className="w-full h-full object-contain" />
+                                    ) : (
+                                        <span className="text-[10px] text-slate-400 text-center">TTE / Kosong</span>
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleSignatureChange}
+                                        className="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1">Format PNG / JPG (Maks. 2MB). Disarankan tanda tangan di atas kertas putih / berlatar transparan.</p>
+                                    {errors.signature && <p className="text-[11px] text-rose-500 mt-1">{errors.signature}</p>}
                                 </div>
                             </div>
                         </div>

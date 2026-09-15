@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import GlassCard from '@/Components/UI/GlassCard';
 import { router } from '@inertiajs/react';
 import { 
-    FiUser, FiAward, FiClock, FiBox, FiCheckSquare, 
+    FiUser, FiAward, FiClock, FiCheckSquare, 
     FiCalendar, FiFileText, FiLayers, FiBookOpen, 
     FiBriefcase, FiTrendingUp, FiCheckCircle, FiCamera, FiUpload
 } from 'react-icons/fi';
@@ -50,7 +50,6 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
         { id: 'profile', label: 'Profile', icon: FiUser },
         { id: 'cpns_pns', label: 'CPNS / PNS', icon: FiAward },
         { id: 'riwayat', label: 'Riwayat', icon: FiClock },
-        { id: 'aset', label: 'Penguasaan Aset', icon: FiBox },
         { id: 'asesmen', label: 'Asesmen', icon: FiLayers },
         { id: 'presensi', label: 'Presensi', icon: FiCalendar },
         { id: 'akur', label: 'Akur', icon: FiCheckCircle },
@@ -450,45 +449,6 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                         )}
                     </GlassCard>
                 </div>
-            )}
-
-            {/* TAB CONTENT: PENGUASAAN ASET */}
-            {activeTab === 'aset' && (
-                <GlassCard className="p-6">
-                    <h3 className="text-base font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
-                        <FiBox className="text-blue-600" /> Daftar Penguasaan Aset Dinas / Sekolah
-                    </h3>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs text-slate-600 border-collapse">
-                            <thead>
-                                <tr className="border-b border-slate-200 bg-slate-50/60 text-slate-700 uppercase font-semibold">
-                                    <th className="py-3 px-4">#</th>
-                                    <th className="py-3 px-4">Nama Aset / Barang</th>
-                                    <th className="py-3 px-4">Kode Aset</th>
-                                    <th className="py-3 px-4">Tahun Penyerahan</th>
-                                    <th className="py-3 px-4">Kondisi</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                                {employee.assets && employee.assets.length > 0 ? (
-                                    employee.assets.map((asset, idx) => (
-                                        <tr key={asset.id} className="hover:bg-slate-50/50">
-                                            <td className="py-3 px-4 font-medium">{idx + 1}</td>
-                                            <td className="py-3 px-4 font-semibold text-slate-800">{asset.asset_name}</td>
-                                            <td className="py-3 px-4 font-mono">{asset.asset_code || '-'}</td>
-                                            <td className="py-3 px-4">{asset.year || '-'}</td>
-                                            <td className="py-3 px-4 font-semibold text-emerald-600">{asset.condition || 'Baik'}</td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="5" className="text-center py-6 text-slate-400 italic">Belum ada aset dinas yang dicatat.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                </GlassCard>
             )}
 
             {/* TAB CONTENT: ASESMEN */}

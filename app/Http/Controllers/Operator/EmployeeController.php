@@ -77,7 +77,7 @@ class EmployeeController extends Controller
     {
         if ($employee->school_id !== auth()->user()->school_id) abort(403);
 
-        $employee->load(['jobHistories', 'educations', 'kgbs', 'assets', 'assessments', 'attendances', 'creditScores', 'leaves', 'documents']);
+        $employee->load(['jobHistories', 'educations', 'kgbs', 'assessments', 'attendances', 'creditScores', 'leaves', 'documents']);
 
         return Inertia::render('Operator/Employees/Show', [
             'employee' => $employee

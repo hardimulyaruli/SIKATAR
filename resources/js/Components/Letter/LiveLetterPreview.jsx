@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import HeaderKopSurat, { LogoPemkabKBB, LogoSekolahDefault, QRCodeTTE } from './HeaderKopSurat';
+import React, { useRef, useState, useEffect } from 'react';
+import HeaderKopSurat, { getImageUrl } from './HeaderKopSurat';
 import Icon from '@/Components/UI/Icon';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -19,6 +19,11 @@ export default function LiveLetterPreview({
     isDisdik = false,
 }) {
     const letterRef = useRef(null);
+    const [sigError, setSigError] = useState(false);
+
+    useEffect(() => {
+        setSigError(false);
+    }, [school?.signature_path]);
 
     const handlePrint = () => {
         window.print();
@@ -343,33 +348,27 @@ export default function LiveLetterPreview({
                             )}
                         </div>
 
-                        {/* Right Section: TTE Barcode Electronic Signature (Logo Pemkab + QR Code Barcode TTE) */}
+                        {/* Right Section: Tanda Tangan Basah */}
                         <div className="text-center w-64 flex flex-col items-center">
-                            <p className="font-bold text-xs mb-3 leading-none text-black">{signeeTitle}</p>
+                            <p className="font-bold text-xs mb-1 leading-none text-black">{signeeTitle}</p>
 
-                            {/* Electronic Stamp Box with Pemkab Logo & Barcode QR Code TTE Seal */}
-                            <div className="w-full my-2 p-2 border border-black rounded-sm text-left font-sans text-[9px] flex items-center gap-2 bg-white">
-                                <LogoPemkabKBB className="w-10 h-12 shrink-0" />
-                                <div className="leading-tight text-black flex-1 min-w-0">
-                                    <p className="text-[7.5px] text-slate-700 font-normal">Ditandatangani secara elektronik oleh:</p>
-                                    <p className="font-bold text-[8.5px] text-black leading-tight">
-                                        {isDisdik ? 'a.n. Kepala Dinas Pendidikan' : `Kepala ${signeeOrg}`}
-                                    </p>
-                                    <p className="font-bold text-[8.5px] text-black leading-tight">Kabupaten Bandung Barat</p>
-                                    {isDisdik && <p className="text-[7.5px] text-slate-700 font-medium">Sekretaris,</p>}
-                                    <div className="mt-0.5">
-                                        <p className="font-bold text-[9px] text-black uppercase leading-tight">{signeeName}</p>
-                                        <p className="text-[7.5px] text-slate-700 font-normal">{signeePangkat}</p>
-                                    </div>
-                                </div>
-                                <div className="shrink-0 flex items-center justify-center p-0.5">
-                                    <QRCodeTTE className="w-8 h-8" />
-                                </div>
+                            {/* Wet Signature Image Container */}
+                            <div className="w-full h-20 flex items-center justify-center my-1">
+                                {school?.signature_path && !sigError ? (
+                                    <img
+                                        src={getImageUrl(school.signature_path)}
+                                        alt="Tanda Tangan Basah"
+                                        className="max-h-20 max-w-[200px] object-contain"
+                                        onError={() => setSigError(true)}
+                                    />
+                                ) : (
+                                    <div className="h-16"></div>
+                                )}
                             </div>
 
-                            <div className="mt-2 text-center leading-tight">
+                            <div className="mt-1 text-center leading-tight">
                                 <p className="font-bold uppercase border-b border-black pb-0.5 inline-block text-xs text-black">{signeeName}</p>
-                                <p className="text-[11px] text-black mt-0.5 font-normal">{signeePangkat}</p>
+                                {signeePangkat && <p className="text-[11px] text-black mt-0.5 font-normal">{signeePangkat}</p>}
                                 <p className="text-[11px] text-black font-normal">NIP. {signeeNip}</p>
                             </div>
                         </div>
@@ -422,27 +421,25 @@ export default function LiveLetterPreview({
                         {/* Lampiran Bottom Signature */}
                         <div className="mt-6 flex justify-end font-sans text-xs text-black">
                             <div className="text-center w-64 flex flex-col items-center">
-                                <p className="font-bold text-xs mb-3 leading-none text-black">{signeeTitle}</p>
+                                <p className="font-bold text-xs mb-1 leading-none text-black">{signeeTitle}</p>
 
-                                <div className="w-full my-2 p-2.5 border border-black rounded-lg text-left font-sans text-[9px] flex items-center gap-2.5 bg-slate-50/90 shadow-xs">
-                                    <LogoPemkabKBB className="w-9 h-11 shrink-0" />
-                                    <div className="leading-snug text-slate-900 flex-1">
-                                        <p className="text-[8px] text-slate-600 font-normal">Ditandatangani secara elektronik oleh:</p>
-                                        <p className="font-bold text-[9px] text-black">
-                                            {isDisdik ? 'a.n. Kepala Dinas Pendidikan' : `Kepala ${signeeOrg}`}
-                                        </p>
-                                        <p className="font-bold text-[9px] text-black">Kabupaten Bandung Barat</p>
-                                        {isDisdik && <p className="text-[8px] text-slate-700 font-medium">Sekretaris,</p>}
-                                        <div className="mt-1">
-                                            <p className="font-bold text-[10px] text-black uppercase">{signeeName}</p>
-                                            <p className="text-[8px] text-slate-700 font-normal">{signeePangkat}</p>
-                                        </div>
-                                    </div>
+                                {/* Wet Signature Image Container */}
+                                <div className="w-full h-20 flex items-center justify-center my-1">
+                                    {school?.signature_path && !sigError ? (
+                                        <img
+                                            src={getImageUrl(school.signature_path)}
+                                            alt="Tanda Tangan Basah"
+                                            className="max-h-20 max-w-[200px] object-contain"
+                                            onError={() => setSigError(true)}
+                                        />
+                                    ) : (
+                                        <div className="h-16"></div>
+                                    )}
                                 </div>
 
-                                <div className="mt-2.5 text-center leading-tight">
+                                <div className="mt-1 text-center leading-tight">
                                     <p className="font-bold uppercase border-b border-black pb-0.5 inline-block text-xs text-black">{signeeName}</p>
-                                    <p className="text-[11px] text-black mt-0.5 font-normal">{signeePangkat}</p>
+                                    {signeePangkat && <p className="text-[11px] text-black mt-0.5 font-normal">{signeePangkat}</p>}
                                     <p className="text-[11px] text-black font-normal">NIP. {signeeNip}</p>
                                 </div>
                             </div>

@@ -73,6 +73,13 @@ export function QRCodeTTE({ className = "w-10 h-10" }) {
     );
 }
 
+export const getImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    const cleanPath = path.startsWith('/storage/') ? path.replace('/storage/', '') : (path.startsWith('storage/') ? path.replace('storage/', '') : path);
+    return `/storage/${cleanPath}`;
+};
+
 export default function HeaderKopSurat({ school, isDisdik = false }) {
     const [imgError, setImgError] = React.useState(false);
 
@@ -83,7 +90,7 @@ export default function HeaderKopSurat({ school, isDisdik = false }) {
 
     if (isDisdik || !school) {
         return (
-            <header className="border-b-4 border-double border-black pb-2 mb-6 font-sans text-center relative">
+            <div className="kop-surat-header border-b-4 border-double border-black pb-2 mb-6 font-sans text-center relative">
                 <div className="flex items-center justify-between gap-4">
                     {/* Left Logo - Pemkab Bandung Barat */}
                     <div className="w-20 h-24 flex items-center justify-center shrink-0">
@@ -92,10 +99,10 @@ export default function HeaderKopSurat({ school, isDisdik = false }) {
 
                     {/* Center Kop Text */}
                     <div className="flex-1 text-black text-center leading-tight">
-                        <h4 className="text-sm md:text-base uppercase tracking-wide font-normal">
+                        <h4 className="text-xs md:text-sm uppercase tracking-wide font-normal">
                             PEMERINTAH KABUPATEN BANDUNG BARAT
                         </h4>
-                        <h3 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-black mt-0.5">
+                        <h3 className="text-lg md:text-xl font-bold uppercase tracking-wider text-black mt-0.5">
                             DINAS PENDIDIKAN
                         </h3>
                         <p className="text-[10px] md:text-[11px] font-sans text-slate-800 mt-1 leading-snug">
@@ -105,23 +112,23 @@ export default function HeaderKopSurat({ school, isDisdik = false }) {
                         </p>
                     </div>
 
-                    {/* Right Spacer */}
+                    {/* Right Spacer (No second logo on right) */}
                     <div className="w-20 h-24 shrink-0"></div>
                 </div>
-            </header>
+            </div>
         );
     }
 
     return (
-        <header className="border-b-4 border-double border-black pb-2 mb-6 font-sans text-center relative">
+        <div className="kop-surat-header border-b-4 border-double border-black pb-2 mb-6 font-sans text-center relative">
             <div className="flex items-center justify-between gap-4">
-                {/* Left Logo - School Uploaded Logo (or default School emblem) */}
+                {/* Left Logo - Profile Logo (School uploaded logo or default school emblem) */}
                 <div className="w-20 h-24 flex items-center justify-center shrink-0">
                     {school?.logo_kop_path && !imgError ? (
                         <img
-                            src={school.logo_kop_path}
+                            src={getImageUrl(school.logo_kop_path)}
                             alt="Logo Sekolah"
-                            className="max-w-[72px] max-h-[88px] object-contain"
+                            className="max-w-[76px] max-h-[88px] object-contain"
                             onError={() => setImgError(true)}
                         />
                     ) : (
@@ -147,9 +154,9 @@ export default function HeaderKopSurat({ school, isDisdik = false }) {
                     </p>
                 </div>
 
-                {/* Right Spacer (Balancing layout with left logo, no anomaly logo) */}
+                {/* Right Spacer (No second logo on right) */}
                 <div className="w-20 h-24 shrink-0"></div>
             </div>
-        </header>
+        </div>
     );
 }

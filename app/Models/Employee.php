@@ -36,11 +36,6 @@ class Employee extends Model
         return $this->hasMany(EmployeeJobHistory::class);
     }
 
-    public function assets()
-    {
-        return $this->hasMany(EmployeeAsset::class);
-    }
-
     public function assessments()
     {
         return $this->hasMany(EmployeeAssessment::class);
