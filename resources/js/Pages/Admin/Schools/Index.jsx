@@ -6,6 +6,7 @@ import GlassCard from '@/Components/UI/GlassCard';
 import Pagination from '@/Components/UI/Pagination';
 import { Link, router } from '@inertiajs/react';
 import { FiHome, FiEye, FiPhone, FiMail } from 'react-icons/fi';
+import { sanitizeNip, findEmployeeByNip, lookupEmployeeApi } from '@/Utils/employeeLookup';
 
 export default function SchoolsIndex({ schools, filters = {} }) {
     const [search, setSearch] = useState(filters.search || '');
@@ -249,23 +250,56 @@ export default function SchoolsIndex({ schools, filters = {} }) {
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
-                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">Kepala Sekolah</label>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <label className="block text-[11px] font-semibold text-slate-700">1. NIP Kepsek (Maks 18 Integer)</label>
+                                            <span className="text-[10px] text-slate-500 font-mono">
+                                                {(formData.headmaster_nip || '').length}/18 Digit
+                                            </span>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            maxLength={18}
+                                            value={formData.headmaster_nip}
+                                            onChange={(e) => {
+                                                const cleanNip = sanitizeNip(e.target.value);
+                                                const emp = findEmployeeByNip(cleanNip);
+                                                
+                                                setFormData((prev) => {
+                                                    const next = {
+                                                        ...prev,
+                                                        headmaster_nip: cleanNip,
+                                                        ...(emp && emp.nama ? { headmaster_name: emp.nama } : {})
+                                                    };
+
+                                                    if (cleanNip.length >= 8) {
+                                                        lookupEmployeeApi(cleanNip).then((apiEmp) => {
+                                                            if (apiEmp && (apiEmp.nama || apiEmp.name)) {
+                                                                setFormData((cur) => ({
+                                                                    ...cur,
+                                                                    headmaster_nip: cleanNip,
+                                                                    headmaster_name: apiEmp.nama || apiEmp.name,
+                                                                }));
+                                                            }
+                                                        });
+                                                    }
+
+                                                    return next;
+                                                });
+                                            }}
+                                            placeholder="18 Digit NIP Kepsek"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-mono font-bold"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">2. Nama Kepala Sekolah</label>
                                         <input
                                             type="text"
                                             value={formData.headmaster_name}
                                             onChange={(e) => setFormData({ ...formData, headmaster_name: e.target.value })}
                                             placeholder="Nama & Gelar Kepsek"
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">NIP Kepala Sekolah</label>
-                                        <input
-                                            type="text"
-                                            value={formData.headmaster_nip}
-                                            onChange={(e) => setFormData({ ...formData, headmaster_nip: e.target.value })}
-                                            placeholder="NIP Kepsek"
-                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg"
+                                            className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold"
                                         />
                                     </div>
                                 </div>

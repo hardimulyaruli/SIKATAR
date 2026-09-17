@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'school_id',
         'nip',
@@ -18,6 +21,7 @@ class Employee extends Model
         'status_pegawai',
         'cpns_date',
         'pns_date',
+        'archived_reason',
     ];
 
     protected $casts = [
@@ -69,5 +73,15 @@ class Employee extends Model
     public function documents()
     {
         return $this->hasMany(EmployeeDocument::class);
+    }
+
+    public function editAuthorizations()
+    {
+        return $this->hasMany(EditAuthorization::class);
+    }
+
+    public function deletionRequests()
+    {
+        return $this->hasMany(DeletionRequest::class);
     }
 }

@@ -4,9 +4,12 @@ import Icon from '@/Components/UI/Icon';
 import LiveLetterPreview from '@/Components/Letter/LiveLetterPreview';
 import { useForm } from '@inertiajs/react';
 import { CLASSIFICATION_CODES } from '@/Utils/classificationCodes';
+import { sanitizeNip, findEmployeeByNip, getAllEmployeesList, lookupEmployeeApi } from '@/Utils/employeeLookup';
+import { SCHOOL_JABATAN_OPTIONS } from '@/Utils/schoolPositions';
 
-export default function ApplicationCreate({ school, templates = [], selectedTemplate: initialTpl }) {
+export default function ApplicationCreate({ school, templates = [], selectedTemplate: initialTpl, employees = [] }) {
     const safeTemplates = Array.isArray(templates) ? templates : [];
+    const allDbEmployees = getAllEmployeesList(employees);
 
     // Build comprehensive template options matching ALL classification codes 2024
     const allAvailableTemplates = CLASSIFICATION_CODES.map((item) => {
@@ -60,13 +63,14 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
             category: item.category,
             default_subject: defaultSubject,
             default_body_template: defaultBody,
-            required_fields_json: ['nama_pegawai', 'nip', 'pangkat_golongan', 'jabatan', 'jumlah_berkas'],
+            required_fields_json: ['nip', 'nama_pegawai', 'pangkat_golongan', 'jabatan', 'jumlah_berkas'],
         };
     });
 
     const defaultTemplate = initialTpl || allAvailableTemplates[0];
     const [selectedTemplate, setSelectedTemplate] = useState(defaultTemplate);
     const [classificationCode, setClassificationCode] = useState(defaultTemplate?.classification_code || '800.1.3.2');
+    const todayIsoDate = new Date().toISOString().split('T')[0];
 
     const { data, setData, post, processing, errors } = useForm({
         template_code: defaultTemplate?.code || 'PENGANTAR-KENAIKAN-PANGKAT',
@@ -74,7 +78,9 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
         subject: defaultTemplate?.default_subject || '',
         recipient: 'Kepala Dinas Pendidikan Kabupaten Bandung Barat',
         body_content: defaultTemplate?.default_body_template || '',
-        form_data: {},
+        form_data: {
+            letter_date: todayIsoDate,
+        },
     });
 
     const handleSelectTemplate = (tpl) => {
@@ -87,7 +93,10 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
             letter_name: tpl.name,
             subject: tpl.default_subject || tpl.name || '',
             body_content: tpl.default_body_template || '',
-            form_data: {},
+            form_data: {
+                ...data.form_data,
+                letter_date: data.form_data?.letter_date || todayIsoDate,
+            },
         });
     };
 
@@ -99,19 +108,49 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
         }
     };
 
-    const handleCustomParamChange = (key, val) => {
+    const handleCustomParamChange = (key, rawVal) => {
+        let val = rawVal;
+        if (key === 'nip') {
+            val = sanitizeNip(rawVal);
+        }
+
+        const matchedEmp = key === 'nip' ? findEmployeeByNip(val, employees) : null;
+
         const newFormData = {
             ...data.form_data,
             [key]: val,
         };
+
+        if (matchedEmp) {
+            newFormData.nip = val;
+            newFormData.nama_pegawai = matchedEmp.nama;
+            newFormData.pangkat_golongan = matchedEmp.gol_asal;
+            newFormData.jabatan = matchedEmp.jabatan;
+
+            if (Array.isArray(newFormData.applicants) && newFormData.applicants.length > 0) {
+                const updatedApplicants = [...newFormData.applicants];
+                updatedApplicants[0] = {
+                    ...updatedApplicants[0],
+                    nip: val,
+                    nama: matchedEmp.nama,
+                    gol_asal: matchedEmp.gol_asal,
+                    jabatan: matchedEmp.jabatan,
+                    unit_kerja: matchedEmp.unit_kerja || school?.name || '',
+                    kecamatan: matchedEmp.kecamatan || '',
+                    _matched: true,
+                };
+                newFormData.applicants = updatedApplicants;
+            }
+        }
+
         if (key === 'jumlah_berkas') {
             const count = parseInt(val, 10);
             if (!isNaN(count) && count > 0) {
                 let current = Array.isArray(data.form_data.applicants) && data.form_data.applicants.length > 0
                     ? [...data.form_data.applicants]
                     : [{
-                        nama: data.form_data.nama_pegawai || '',
                         nip: data.form_data.nip || '',
+                        nama: data.form_data.nama_pegawai || '',
                         gol_asal: data.form_data.pangkat_golongan || '',
                         jabatan: data.form_data.jabatan || '',
                         unit_kerja: school?.name || '',
@@ -119,7 +158,7 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                     }];
                 if (current.length < count) {
                     for (let i = current.length; i < count; i++) {
-                        current.push({ nama: '', nip: '', gol_asal: '', jabatan: '', unit_kerja: school?.name || '', kecamatan: '' });
+                        current.push({ nip: '', nama: '', gol_asal: '', jabatan: '', unit_kerja: school?.name || '', kecamatan: '' });
                     }
                 } else if (current.length > count && count >= 1) {
                     current = current.slice(0, count);
@@ -127,37 +166,125 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                 newFormData.applicants = current;
             }
         }
+
         setData('form_data', newFormData);
+
+        if (key === 'nip' && val.length >= 8) {
+            lookupEmployeeApi(val).then((apiEmp) => {
+                if (apiEmp) {
+                    const currentFormData = data.form_data;
+                    const curApps = Array.isArray(currentFormData.applicants) && currentFormData.applicants.length > 0
+                        ? [...currentFormData.applicants]
+                        : [{ nip: val, nama: '', gol_asal: '', jabatan: '', unit_kerja: school?.name || '', kecamatan: '' }];
+                    curApps[0] = {
+                        ...curApps[0],
+                        nip: val,
+                        nama: apiEmp.nama || apiEmp.name,
+                        gol_asal: apiEmp.pangkat_golongan || apiEmp.gol_asal,
+                        jabatan: apiEmp.jabatan,
+                        unit_kerja: apiEmp.unit_kerja || school?.name || '',
+                        kecamatan: apiEmp.kecamatan || '',
+                        _matched: true,
+                    };
+                    setData('form_data', {
+                        ...currentFormData,
+                        nip: val,
+                        nama_pegawai: apiEmp.nama || apiEmp.name,
+                        pangkat_golongan: apiEmp.pangkat_golongan || apiEmp.gol_asal,
+                        jabatan: apiEmp.jabatan,
+                        applicants: curApps,
+                    });
+                }
+            });
+        }
     };
 
     const applicantsList = Array.isArray(data.form_data.applicants) && data.form_data.applicants.length > 0
         ? data.form_data.applicants
         : [{
-            nama: data.form_data.nama_pegawai || '',
             nip: data.form_data.nip || '',
+            nama: data.form_data.nama_pegawai || '',
             gol_asal: data.form_data.pangkat_golongan || '',
             jabatan: data.form_data.jabatan || '',
             unit_kerja: school?.name || '',
             kecamatan: '',
         }];
 
-    const updateApplicant = (idx, field, val) => {
+    const updateApplicant = (idx, field, rawVal) => {
         const updated = [...applicantsList];
-        updated[idx] = { ...updated[idx], [field]: val };
+        let val = rawVal;
+        if (field === 'nip') {
+            val = sanitizeNip(rawVal);
+        }
+
+        const matchedEmp = field === 'nip' ? findEmployeeByNip(val, employees) : null;
+
+        if (matchedEmp) {
+            updated[idx] = {
+                ...updated[idx],
+                nip: val,
+                nama: matchedEmp.nama,
+                gol_asal: matchedEmp.gol_asal,
+                jabatan: matchedEmp.jabatan,
+                unit_kerja: matchedEmp.unit_kerja || school?.name || '',
+                kecamatan: matchedEmp.kecamatan || '',
+                _matched: true,
+            };
+        } else {
+            updated[idx] = {
+                ...updated[idx],
+                [field]: val,
+                ...(field === 'nip' ? { _matched: false } : {}),
+            };
+        }
+
         const newFormData = { ...data.form_data, applicants: updated };
         if (idx === 0) {
-            if (field === 'nama') newFormData.nama_pegawai = val;
-            if (field === 'nip') newFormData.nip = val;
-            if (field === 'gol_asal') newFormData.pangkat_golongan = val;
-            if (field === 'jabatan') newFormData.jabatan = val;
+            if (field === 'nip') {
+                newFormData.nip = val;
+                if (matchedEmp) {
+                    newFormData.nama_pegawai = matchedEmp.nama;
+                    newFormData.pangkat_golongan = matchedEmp.gol_asal;
+                    newFormData.jabatan = matchedEmp.jabatan;
+                }
+            } else if (field === 'nama') newFormData.nama_pegawai = val;
+            else if (field === 'gol_asal') newFormData.pangkat_golongan = val;
+            else if (field === 'jabatan') newFormData.jabatan = val;
         }
+
         setData('form_data', newFormData);
+
+        if (field === 'nip' && val.length >= 8) {
+            lookupEmployeeApi(val).then((apiEmp) => {
+                if (apiEmp) {
+                    const currentApps = [...updated];
+                    currentApps[idx] = {
+                        ...currentApps[idx],
+                        nip: val,
+                        nama: apiEmp.nama || apiEmp.name,
+                        gol_asal: apiEmp.pangkat_golongan || apiEmp.gol_asal,
+                        jabatan: apiEmp.jabatan,
+                        unit_kerja: apiEmp.unit_kerja || school?.name || '',
+                        kecamatan: apiEmp.kecamatan || '',
+                        _matched: true,
+                    };
+                    const updatedObj = { ...newFormData, applicants: currentApps };
+                    if (idx === 0) {
+                        updatedObj.nip = val;
+                        updatedObj.nama_pegawai = apiEmp.nama || apiEmp.name;
+                        updatedObj.pangkat_golongan = apiEmp.pangkat_golongan || apiEmp.gol_asal;
+                        updatedObj.jabatan = apiEmp.jabatan;
+                    }
+                    setData('form_data', updatedObj);
+                }
+            });
+        }
     };
 
     const addApplicant = () => {
         const updated = [
             ...applicantsList,
-            { nama: '', nip: '', gol_asal: '', jabatan: '', unit_kerja: school?.name || '', kecamatan: '' }
+            { nip: '', nama: '', gol_asal: '', jabatan: '', unit_kerja: school?.name || '', kecamatan: '' }
         ];
         setData('form_data', {
             ...data.form_data,
@@ -179,6 +306,20 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
     const handleSubmit = (e) => {
         e.preventDefault();
         post('/operator/applications');
+    };
+
+    // Helper to sort custom fields so 'nip' is always first before 'nama_pegawai'
+    const getSortedCustomFields = (fieldsArray) => {
+        if (!Array.isArray(fieldsArray)) return [];
+        const copy = [...fieldsArray];
+        copy.sort((a, b) => {
+            if (a === 'nip') return -1;
+            if (b === 'nip') return 1;
+            if (a === 'nama_pegawai' || a === 'nama') return -1;
+            if (b === 'nama_pegawai' || b === 'nama') return 1;
+            return 0;
+        });
+        return copy;
     };
 
     return (
@@ -231,6 +372,33 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                                 ))}
                             </select>
                         </div>
+ 
+                        {/* Tanggal Surat Pengantar */}
+                        <div className="p-4 bg-surface-container-low rounded-DEFAULT border border-outline/20 space-y-2">
+                            <div className="flex items-center justify-between">
+                                <label className="block font-label-sm text-[10px] uppercase tracking-widest text-primary font-bold">
+                                    Tanggal Surat Pengantar
+                                </label>
+                                <span className="text-[10px] font-mono text-primary font-semibold bg-surface-container-lowest px-2 py-0.5 rounded border border-outline/10">
+                                    Tahun: {(data.form_data?.letter_date || todayIsoDate).split('-')[0]}
+                                </span>
+                            </div>
+                            <input
+                                type="date"
+                                required
+                                value={data.form_data?.letter_date || todayIsoDate}
+                                onChange={(e) => {
+                                    setData('form_data', {
+                                        ...data.form_data,
+                                        letter_date: e.target.value,
+                                    });
+                                }}
+                                className="w-full px-3 py-2 bg-surface-container-lowest border border-outline/20 rounded-md text-xs font-semibold text-primary focus:ring-1 focus:ring-primary focus:border-primary"
+                            />
+                            <p className="text-[11px] text-on-surface-variant leading-relaxed">
+                                Tanggal dicantumkan di pojok kanan atas surat. Penomoran surat (<span className="font-mono font-bold">... - Sekre/{(data.form_data?.letter_date || todayIsoDate).split('-')[0]}</span>) otomatis menyesuaikan tahun yang dipilih.
+                            </p>
+                        </div>
 
                         {/* Recipient */}
                         <div className="relative">
@@ -262,34 +430,47 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                             />
                         </div>
 
-                        {/* Custom Fields if required */}
-                        {Array.isArray(selectedTemplate?.required_fields_json) && selectedTemplate.required_fields_json.length > 0 && (
-                            <div className="p-4 bg-surface-container-low rounded-DEFAULT border border-outline/10 space-y-3 font-body-md text-xs">
-                                <p className="font-label-sm text-[10px] uppercase tracking-widest text-primary font-bold">
-                                    Parameter Khusus Berkas Pengantar:
-                                </p>
-                                {selectedTemplate.required_fields_json.map((fieldKey) => (
-                                    <div key={fieldKey}>
-                                        <label className="block font-semibold capitalize text-on-surface-variant mb-1 text-xs">
-                                            {fieldKey.replace(/_/g, ' ')}
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={data.form_data[fieldKey] || ''}
-                                            onChange={(e) => handleCustomParamChange(fieldKey, e.target.value)}
-                                            placeholder={`Isi ${fieldKey.replace(/_/g, ' ')}`}
-                                            className="w-full px-3 py-2 bg-surface-container-lowest border border-outline/20 rounded-sm text-xs text-primary"
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        {/* Custom Fields if required (Excluding applicant and count fields) */}
+                        {(() => {
+                            const EXCLUDED_KEYS = new Set([
+                                'nip', 'nama_pegawai', 'nama', 'pangkat_golongan', 'pangkat',
+                                'golongan', 'gol_asal', 'jabatan', 'jumlah_berkas', 'jumlah_orang'
+                            ]);
+                            const customFields = (selectedTemplate?.required_fields_json || []).filter(
+                                (key) => !EXCLUDED_KEYS.has(key)
+                            );
+                            if (customFields.length === 0) return null;
 
-                        {/* Dynamic Applicant Form List (For Lampiran Table) */}
+                            return (
+                                <div className="p-4 bg-surface-container-low rounded-DEFAULT border border-outline/10 space-y-3 font-body-md text-xs">
+                                    <p className="font-label-sm text-[10px] uppercase tracking-widest text-primary font-bold">
+                                        Parameter Khusus Berkas Pengantar:
+                                    </p>
+                                    {customFields.map((fieldKey) => (
+                                        <div key={fieldKey}>
+                                            <div className="flex items-center justify-between mb-1">
+                                                <label className="block font-semibold capitalize text-on-surface-variant text-xs">
+                                                    {fieldKey.replace(/_/g, ' ')}
+                                                </label>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={data.form_data[fieldKey] || ''}
+                                                onChange={(e) => handleCustomParamChange(fieldKey, e.target.value)}
+                                                placeholder={`Isi ${fieldKey.replace(/_/g, ' ')}`}
+                                                className="w-full px-3 py-2 bg-surface-container-lowest border border-outline/20 rounded-sm text-xs text-primary"
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        })()}
+
+                        {/* Single Unified Data Pemohon Section */}
                         <div className="p-4 bg-primary-container/20 rounded-DEFAULT border border-primary/20 space-y-4">
                             <div className="flex items-center justify-between">
                                 <h3 className="font-label-sm text-[11px] uppercase tracking-widest text-primary font-bold">
-                                    Data Pemohon pada Tabel Lampiran ({applicantsList.length} Orang)
+                                    Data Pemohon ({applicantsList.length} Orang)
                                 </h3>
                                 <button
                                     type="button"
@@ -302,8 +483,8 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
 
                             <div className="space-y-4">
                                 {applicantsList.map((appItem, aIdx) => (
-                                    <div key={aIdx} className="p-3 bg-surface-bright rounded-md border border-outline/20 space-y-2 relative shadow-xs">
-                                        <div className="flex items-center justify-between text-xs font-bold text-primary border-b border-outline/10 pb-1">
+                                    <div key={aIdx} className="p-3.5 bg-surface-bright rounded-md border border-outline/20 space-y-3 relative shadow-xs">
+                                        <div className="flex items-center justify-between text-xs font-bold text-primary border-b border-outline/10 pb-1.5">
                                             <span>Pemohon #{aIdx + 1} {aIdx === 0 ? '(Pemohon Utama)' : ''}</span>
                                             {applicantsList.length > 1 && (
                                                 <button
@@ -316,29 +497,43 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                                             )}
                                         </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                                            {/* NIP Input FIELD FIRST */}
+                                            <div className="sm:col-span-2 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <label className="block text-[11px] font-bold text-blue-950 uppercase tracking-wider">
+                                                        1. NIP Pegawai <span className="text-rose-500">* (Maks 18 Digit)</span>
+                                                    </label>
+                                                    <span className="text-[10px] font-semibold font-mono text-slate-500">
+                                                        {(appItem.nip || '').length}/18 Digit
+                                                    </span>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    inputMode="numeric"
+                                                    pattern="[0-9]*"
+                                                    maxLength={18}
+                                                    value={appItem.nip || ''}
+                                                    onChange={(e) => updateApplicant(aIdx, 'nip', e.target.value)}
+                                                    placeholder="Masukkan 18 digit NIP..."
+                                                    className="w-full px-3 py-2 bg-white border border-blue-200 rounded-md text-xs font-mono font-bold text-blue-900 focus:ring-2 focus:ring-blue-500/20 shadow-xs"
+                                                />
+                                            </div>
+
+                                            {/* NAMA Lengkap FIELD SECOND */}
                                             <div className="sm:col-span-2">
-                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">Nama Lengkap & Gelar</label>
+                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">2. Nama Lengkap & Gelar</label>
                                                 <input
                                                     type="text"
                                                     value={appItem.nama || ''}
                                                     onChange={(e) => updateApplicant(aIdx, 'nama', e.target.value)}
-                                                    placeholder="Nama & Gelar"
+                                                    placeholder="Nama & Gelar Pegawai"
                                                     className="w-full px-2.5 py-1.5 bg-surface-container-lowest border border-outline/20 rounded text-xs font-bold"
                                                 />
                                             </div>
+
                                             <div>
-                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">NIP</label>
-                                                <input
-                                                    type="text"
-                                                    value={appItem.nip || ''}
-                                                    onChange={(e) => updateApplicant(aIdx, 'nip', e.target.value)}
-                                                    placeholder="18 digit NIP"
-                                                    className="w-full px-2.5 py-1.5 bg-surface-container-lowest border border-outline/20 rounded text-xs"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">Golongan Asal</label>
+                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">3. Golongan Asal</label>
                                                 <input
                                                     type="text"
                                                     value={appItem.gol_asal || ''}
@@ -348,17 +543,44 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                                                 />
                                             </div>
                                             <div>
-                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">Jabatan</label>
-                                                <input
-                                                    type="text"
-                                                    value={appItem.jabatan || ''}
-                                                    onChange={(e) => updateApplicant(aIdx, 'jabatan', e.target.value)}
-                                                    placeholder="Guru Ahli Madya"
-                                                    className="w-full px-2.5 py-1.5 bg-surface-container-lowest border border-outline/20 rounded text-xs"
-                                                />
+                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">4. Jabatan</label>
+                                                <div className="space-y-1">
+                                                    <select
+                                                        value={SCHOOL_JABATAN_OPTIONS.includes(appItem.jabatan) ? appItem.jabatan : (appItem.jabatan ? '__CUSTOM__' : '')}
+                                                        onChange={(e) => {
+                                                            if (e.target.value !== '__CUSTOM__' && e.target.value !== '') {
+                                                                updateApplicant(aIdx, 'jabatan', e.target.value);
+                                                            }
+                                                        }}
+                                                        className="w-full px-2 py-1.5 bg-surface-container-lowest border border-outline/20 rounded text-xs font-semibold text-primary"
+                                                    >
+                                                        <option value="">-- Pilih Jabatan Sekolah --</option>
+                                                        {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
+                                                            <option key={jIdx} value={jbt}>
+                                                                {jbt}
+                                                            </option>
+                                                        ))}
+                                                        {appItem.jabatan && !SCHOOL_JABATAN_OPTIONS.includes(appItem.jabatan) && (
+                                                            <option value="__CUSTOM__">{appItem.jabatan} (Kustom)</option>
+                                                        )}
+                                                    </select>
+                                                    <input
+                                                        type="text"
+                                                        list={`jabatan-list-${aIdx}`}
+                                                        value={appItem.jabatan || ''}
+                                                        onChange={(e) => updateApplicant(aIdx, 'jabatan', e.target.value)}
+                                                        placeholder="Ketik atau edit nama jabatan..."
+                                                        className="w-full px-2 py-1 bg-surface-container-lowest border border-outline/20 rounded text-[11px] text-primary font-medium"
+                                                    />
+                                                    <datalist id={`jabatan-list-${aIdx}`}>
+                                                        {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
+                                                            <option key={jIdx} value={jbt} />
+                                                        ))}
+                                                    </datalist>
+                                                </div>
                                             </div>
                                             <div>
-                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">Unit Kerja</label>
+                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">5. Unit Kerja</label>
                                                 <input
                                                     type="text"
                                                     value={appItem.unit_kerja || ''}
@@ -367,8 +589,8 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                                                     className="w-full px-2.5 py-1.5 bg-surface-container-lowest border border-outline/20 rounded text-xs"
                                                 />
                                             </div>
-                                            <div className="sm:col-span-2">
-                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">Kecamatan</label>
+                                            <div>
+                                                <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">6. Kecamatan</label>
                                                 <input
                                                     type="text"
                                                     value={appItem.kecamatan || ''}

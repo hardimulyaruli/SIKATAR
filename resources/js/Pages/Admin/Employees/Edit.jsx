@@ -2,15 +2,11 @@ import React from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import PageHeader from '@/Components/UI/PageHeader';
 import GlassCard from '@/Components/UI/GlassCard';
+import EmployeeDetailTabs from '@/Components/UI/EmployeeDetailTabs';
 import { useForm, Link } from '@inertiajs/react';
 import { FiSave, FiX, FiUser } from 'react-icons/fi';
-
-const getImageUrl = (path) => {
-    if (!path) return null;
-    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
-    const cleanPath = path.startsWith('/storage/') ? path.replace('/storage/', '') : (path.startsWith('storage/') ? path.replace('storage/', '') : path);
-    return `/storage/${cleanPath}`;
-};
+import { getImageUrl } from '@/Utils/url';
+import { sanitizeNip } from '@/Utils/employeeLookup';
 
 export default function EmployeeEdit({ employee, schools }) {
     const { data, setData, post, processing, errors } = useForm({
@@ -73,15 +69,23 @@ export default function EmployeeEdit({ employee, schools }) {
                                 {errors.photo && <p className="text-red-500 text-xs mt-1">{errors.photo}</p>}
                             </div>
 
-                            {/* NIP */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-semibold text-slate-700">NIP</label>
+                            {/* NIP (FIRST) */}
+                            <div className="space-y-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-sm font-bold text-blue-950">NIP (Maks 18 Digit)</label>
+                                    <span className="text-xs font-mono font-semibold text-slate-500">
+                                        {(data.nip || '').length}/18 Digit
+                                    </span>
+                                </div>
                                 <input
                                     type="text"
-                                    className={`w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.nip ? 'border-red-500' : ''}`}
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={18}
+                                    className={`w-full rounded-xl border-blue-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm font-mono font-bold ${errors.nip ? 'border-red-500' : ''}`}
                                     value={data.nip}
-                                    onChange={e => setData('nip', e.target.value)}
-                                    placeholder="Opsional untuk Non-ASN"
+                                    onChange={e => setData('nip', sanitizeNip(e.target.value))}
+                                    placeholder="Masukkan 18 digit NIP..."
                                 />
                                 {errors.nip && <p className="text-red-500 text-xs mt-1">{errors.nip}</p>}
                             </div>

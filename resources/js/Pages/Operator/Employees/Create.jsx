@@ -4,8 +4,11 @@ import PageHeader from '@/Components/UI/PageHeader';
 import GlassCard from '@/Components/UI/GlassCard';
 import { useForm, Link } from '@inertiajs/react';
 import { FiSave, FiX } from 'react-icons/fi';
+import { sanitizeNip, findEmployeeByNip, getAllEmployeesList, lookupEmployeeApi } from '@/Utils/employeeLookup';
 
 export default function EmployeeCreate() {
+    const allDbEmployees = getAllEmployeesList();
+
     const { data, setData, post, processing, errors } = useForm({
         nip: '',
         name: '',
@@ -17,6 +20,47 @@ export default function EmployeeCreate() {
         cpns_date: '',
         pns_date: '',
     });
+
+    const handleNipChange = (rawVal) => {
+        const cleanNip = sanitizeNip(rawVal);
+        const emp = findEmployeeByNip(cleanNip);
+        
+        const nextData = {
+            ...data,
+            nip: cleanNip,
+            ...(emp ? {
+                name: emp.nama || emp.name || data.name,
+                place_of_birth: emp.place_of_birth || data.place_of_birth,
+                date_of_birth: emp.date_of_birth || data.date_of_birth,
+                address: emp.address || data.address,
+                contact: emp.contact || data.contact,
+                status_pegawai: emp.status_pegawai || data.status_pegawai,
+                cpns_date: emp.cpns_date || data.cpns_date,
+                pns_date: emp.pns_date || data.pns_date,
+            } : {})
+        };
+
+        setData(nextData);
+
+        if (cleanNip.length >= 8) {
+            lookupEmployeeApi(cleanNip).then((apiEmp) => {
+                if (apiEmp) {
+                    setData({
+                        ...nextData,
+                        nip: cleanNip,
+                        name: apiEmp.nama || apiEmp.name || nextData.name,
+                        place_of_birth: apiEmp.place_of_birth || nextData.place_of_birth,
+                        date_of_birth: apiEmp.date_of_birth || nextData.date_of_birth,
+                        address: apiEmp.address || nextData.address,
+                        contact: apiEmp.contact || nextData.contact,
+                        status_pegawai: apiEmp.status_pegawai || nextData.status_pegawai,
+                        cpns_date: apiEmp.cpns_date || nextData.cpns_date,
+                        pns_date: apiEmp.pns_date || nextData.pns_date,
+                    });
+                }
+            });
+        }
+    };
 
     const submit = (e) => {
         e.preventDefault();
@@ -34,21 +78,29 @@ export default function EmployeeCreate() {
                 <GlassCard>
                     <form onSubmit={submit} className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            
-                            {/* NIP */}
-                            <div className="space-y-2">
-                                <label className="block text-sm font-semibold text-slate-700">NIP</label>
+                            {/* NIP (FIRST) */}
+                            <div className="space-y-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-sm font-bold text-blue-950">NIP (Maks 18 Digit)</label>
+                                    <span className="text-xs font-mono font-semibold text-slate-500">
+                                        {data.nip.length}/18 Digit
+                                    </span>
+                                </div>
                                 <input
                                     type="text"
-                                    className={`w-full rounded-xl border-slate-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm ${errors.nip ? 'border-red-500' : ''}`}
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
+                                    maxLength={18}
+                                    className={`w-full rounded-xl border-blue-200 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm font-mono font-bold ${errors.nip ? 'border-red-500' : ''}`}
                                     value={data.nip}
-                                    onChange={e => setData('nip', e.target.value)}
-                                    placeholder="Opsional untuk Non-ASN"
+                                    onChange={e => handleNipChange(e.target.value)}
+                                    placeholder="Masukkan 18 digit angka NIP..."
                                 />
                                 {errors.nip && <p className="text-red-500 text-xs mt-1">{errors.nip}</p>}
+                                <p className="text-[11px] text-slate-500">Dibatasi maksimal 18 digit angka.</p>
                             </div>
 
-                            {/* Nama */}
+                            {/* Nama (SECOND) */}
                             <div className="space-y-2">
                                 <label className="block text-sm font-semibold text-slate-700">Nama Lengkap *</label>
                                 <input

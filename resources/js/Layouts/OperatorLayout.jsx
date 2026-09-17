@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import Sidebar from '@/Components/UI/Sidebar';
 import Navbar from '@/Components/UI/Navbar';
+import { usePage } from '@inertiajs/react';
 
 export default function OperatorLayout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const { url } = usePage();
 
     return (
         <div className="min-h-screen bg-background text-on-background font-sans-inter antialiased flex flex-col md:flex-row overflow-x-hidden">
@@ -11,7 +13,9 @@ export default function OperatorLayout({ children }) {
             <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${sidebarOpen ? 'md:ml-72' : 'ml-0'}`}>
                 <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
                 <main className="flex-1 p-6 md:p-8 max-w-[1536px] w-full mx-auto">
-                    {children}
+                    <div key={url} className="page-enter">
+                        {children}
+                    </div>
                 </main>
             </div>
             

@@ -1,6 +1,8 @@
 import React from 'react';
 import { FiSend, FiPlus, FiTrash2, FiUsers } from 'react-icons/fi';
 import { CLASSIFICATION_CODES } from '@/Utils/classificationCodes';
+import { sanitizeNip, findEmployeeByNip, getAllEmployeesList, lookupEmployeeApi } from '@/Utils/employeeLookup';
+import { SCHOOL_JABATAN_OPTIONS } from '@/Utils/schoolPositions';
 
 export default function DynamicLetterForm({
     subject,
@@ -18,12 +20,14 @@ export default function DynamicLetterForm({
     processing = false,
     submitLabel = 'Kirim Pengajuan Surat'
 }) {
+    const allDbEmployees = getAllEmployeesList();
+
     const applicants = Array.isArray(formData.applicants) && formData.applicants.length > 0
         ? formData.applicants
         : [
             {
-                nama: formData.nama_pegawai || '',
                 nip: formData.nip || '',
+                nama: formData.nama_pegawai || '',
                 gol_asal: formData.pangkat_golongan || '',
                 jabatan: formData.jabatan || '',
                 unit_kerja: formData.unit_kerja || '',
@@ -33,17 +37,77 @@ export default function DynamicLetterForm({
 
     const updateApplicant = (index, field, value) => {
         const updated = [...applicants];
-        updated[index] = { ...updated[index], [field]: value };
+        let val = value;
+        if (field === 'nip') {
+            val = sanitizeNip(value);
+        }
+
+        const matchedEmp = field === 'nip' ? findEmployeeByNip(val) : null;
+
+        if (matchedEmp) {
+            updated[index] = {
+                ...updated[index],
+                nip: val,
+                nama: matchedEmp.nama,
+                gol_asal: matchedEmp.gol_asal,
+                jabatan: matchedEmp.jabatan,
+                unit_kerja: matchedEmp.unit_kerja,
+                kecamatan: matchedEmp.kecamatan,
+                _matched: true,
+            };
+        } else {
+            updated[index] = {
+                ...updated[index],
+                [field]: val,
+                ...(field === 'nip' ? { _matched: false } : {}),
+            };
+        }
+
         onFormDataChange('applicants', updated);
+
         if (index === 0) {
-            onFormDataChange(field === 'gol_asal' ? 'pangkat_golongan' : field, value);
+            if (field === 'nip') {
+                onFormDataChange('nip', val);
+                if (matchedEmp) {
+                    onFormDataChange('nama_pegawai', matchedEmp.nama);
+                    onFormDataChange('pangkat_golongan', matchedEmp.gol_asal);
+                    onFormDataChange('jabatan', matchedEmp.jabatan);
+                }
+            } else {
+                onFormDataChange(field === 'gol_asal' ? 'pangkat_golongan' : field, val);
+            }
+        }
+
+        if (field === 'nip' && val.length >= 8) {
+            lookupEmployeeApi(val).then((apiEmp) => {
+                if (apiEmp) {
+                    const cur = [...updated];
+                    cur[index] = {
+                        ...cur[index],
+                        nip: val,
+                        nama: apiEmp.nama || apiEmp.name,
+                        gol_asal: apiEmp.pangkat_golongan || apiEmp.gol_asal,
+                        jabatan: apiEmp.jabatan,
+                        unit_kerja: apiEmp.unit_kerja,
+                        kecamatan: apiEmp.kecamatan,
+                        _matched: true,
+                    };
+                    onFormDataChange('applicants', cur);
+                    if (index === 0) {
+                        onFormDataChange('nip', val);
+                        onFormDataChange('nama_pegawai', apiEmp.nama || apiEmp.name);
+                        onFormDataChange('pangkat_golongan', apiEmp.pangkat_golongan || apiEmp.gol_asal);
+                        onFormDataChange('jabatan', apiEmp.jabatan);
+                    }
+                }
+            });
         }
     };
 
     const addApplicant = () => {
         const updated = [
             ...applicants,
-            { nama: '', nip: '', gol_asal: '', jabatan: '', unit_kerja: '', kecamatan: '' }
+            { nip: '', nama: '', gol_asal: '', jabatan: '', unit_kerja: '', kecamatan: '' }
         ];
         onFormDataChange('applicants', updated);
     };
@@ -77,6 +141,23 @@ export default function DynamicLetterForm({
                         Format nomor resmi yang akan tercetak: <span className="font-mono font-bold">{classificationCode}/[Nomor Urut] - [Unit]/[Tahun]</span>
                     </p>
                 </div>
+            </div>
+
+            {/* Tanggal Surat */}
+            <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                    Tanggal Surat Pengantar <span className="text-rose-500">*</span>
+                </label>
+                <input
+                    type="date"
+                    required
+                    value={formData?.letter_date || new Date().toISOString().split('T')[0]}
+                    onChange={(e) => onFormDataChange('letter_date', e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-xs"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                    Tanggal dicantumkan di pojok kanan atas surat dan tahunnya menentukan penomoran surat.
+                </p>
             </div>
 
             {/* Subject / Perihal */}
@@ -146,8 +227,31 @@ export default function DynamicLetterForm({
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                                {/* NIP Input FIELD FIRST */}
+                                <div className="sm:col-span-2 bg-blue-50/50 p-2 rounded-lg border border-blue-100">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                        <label className="block text-[11px] font-bold text-blue-950 uppercase tracking-wider">
+                                            1. NIP Pegawai <span className="text-rose-500">* (Maks 18 Digit)</span>
+                                        </label>
+                                        <span className="text-[10px] font-mono font-semibold text-slate-500">
+                                            {(item.nip || '').length}/18 Digit
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        maxLength={18}
+                                        value={item.nip || ''}
+                                        onChange={(e) => updateApplicant(idx, 'nip', e.target.value)}
+                                        placeholder="Masukkan 18 digit NIP..."
+                                        className="w-full px-2.5 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-mono font-bold text-blue-900 focus:ring-2 focus:ring-blue-500/20"
+                                    />
+                                </div>
+
+                                {/* NAMA Lengkap FIELD SECOND */}
                                 <div className="sm:col-span-2">
-                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Nama Lengkap & Gelar</label>
+                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">2. Nama Lengkap & Gelar</label>
                                     <input
                                         type="text"
                                         required={idx === 0}
@@ -159,18 +263,7 @@ export default function DynamicLetterForm({
                                 </div>
 
                                 <div>
-                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">NIP</label>
-                                    <input
-                                        type="text"
-                                        value={item.nip || ''}
-                                        onChange={(e) => updateApplicant(idx, 'nip', e.target.value)}
-                                        placeholder="Contoh: 19800512 200604 1 005"
-                                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Pangkat / Golongan Asal</label>
+                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">3. Pangkat / Golongan Asal</label>
                                     <input
                                         type="text"
                                         value={item.gol_asal || ''}
@@ -181,18 +274,45 @@ export default function DynamicLetterForm({
                                 </div>
 
                                 <div>
-                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Jabatan</label>
-                                    <input
-                                        type="text"
-                                        value={item.jabatan || ''}
-                                        onChange={(e) => updateApplicant(idx, 'jabatan', e.target.value)}
-                                        placeholder="Contoh: Guru Ahli Madya"
-                                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs"
-                                    />
+                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">4. Jabatan</label>
+                                    <div className="space-y-1">
+                                        <select
+                                            value={SCHOOL_JABATAN_OPTIONS.includes(item.jabatan) ? item.jabatan : (item.jabatan ? '__CUSTOM__' : '')}
+                                            onChange={(e) => {
+                                                if (e.target.value !== '__CUSTOM__' && e.target.value !== '') {
+                                                    updateApplicant(idx, 'jabatan', e.target.value);
+                                                }
+                                            }}
+                                            className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                                        >
+                                            <option value="">-- Pilih Jabatan Sekolah --</option>
+                                            {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
+                                                <option key={jIdx} value={jbt}>
+                                                    {jbt}
+                                                </option>
+                                            ))}
+                                            {item.jabatan && !SCHOOL_JABATAN_OPTIONS.includes(item.jabatan) && (
+                                                <option value="__CUSTOM__">{item.jabatan} (Kustom)</option>
+                                            )}
+                                        </select>
+                                        <input
+                                            type="text"
+                                            list={`jabatan-dlf-list-${idx}`}
+                                            value={item.jabatan || ''}
+                                            onChange={(e) => updateApplicant(idx, 'jabatan', e.target.value)}
+                                            placeholder="Ketik atau edit nama jabatan..."
+                                            className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-800"
+                                        />
+                                        <datalist id={`jabatan-dlf-list-${idx}`}>
+                                            {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
+                                                <option key={jIdx} value={jbt} />
+                                            ))}
+                                        </datalist>
+                                    </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Unit Kerja</label>
+                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">5. Unit Kerja</label>
                                     <input
                                         type="text"
                                         value={item.unit_kerja || ''}
@@ -203,7 +323,7 @@ export default function DynamicLetterForm({
                                 </div>
 
                                 <div>
-                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">Kecamatan</label>
+                                    <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">6. Kecamatan</label>
                                     <input
                                         type="text"
                                         value={item.kecamatan || ''}

@@ -12,6 +12,57 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
+/* Smooth Page & Component Transition Animation */
+@keyframes pageSlideFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageSlideFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+}
+
+@layer base {
+  /* HIDE ALL BLINKING CARET CURSORS on non-input elements across the entire website */
+  * {
+    caret-color: transparent !important;
+  }
+
+  /* Only real form inputs and textareas should show the typing caret */
+  input, textarea, [contenteditable="true"] {
+    caret-color: auto !important;
+  }
+
+  /* UI Navigation, Sidebar, Buttons, Badges, and Table Headers */
+  nav, aside,
+  button, th, .badge, [role="button"] {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  button, [role="button"], a, input[type="submit"], input[type="button"], label.cursor-pointer, .cursor-pointer {
+    cursor: pointer !important;
+  }
+
+  /* All data, text, table cells, numbers, and inputs can be freely selected and copied */
+  body, p, span, td, dd, dt, h1, h2, h3, h4, h5, h6, dl, ul, ol, li,
+  input, textarea, [contenteditable="true"], .select-text {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+}
+
 @layer utilities {
   .font-serif-garamond {
     font-family: 'EB Garamond', Georgia, serif;

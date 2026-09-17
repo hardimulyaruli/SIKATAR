@@ -107,7 +107,7 @@ export default function RevisionFeedbackModal({ isOpen, onClose, onSubmit, initi
                                     type="text"
                                     value={officialNumber}
                                     onChange={(e) => setOfficialNumber(e.target.value)}
-                                    placeholder="Contoh: 421.2/084-Disdik/VIII/2026 (Kosongkan untuk otomatis)"
+                                    placeholder={`Contoh: 421.2/084-Disdik/VIII/${new Date().getFullYear()} (Kosongkan untuk otomatis)`}
                                     className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-blue-500/20"
                                 />
                             </div>

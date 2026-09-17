@@ -4,7 +4,8 @@ import { router } from '@inertiajs/react';
 import { 
     FiUser, FiAward, FiClock, FiCheckSquare, 
     FiCalendar, FiFileText, FiLayers, FiBookOpen, 
-    FiBriefcase, FiTrendingUp, FiCheckCircle, FiCamera, FiUpload
+    FiBriefcase, FiTrendingUp, FiCheckCircle, FiCamera, FiUpload,
+    FiCopy, FiCheck
 } from 'react-icons/fi';
 
 const getImageUrl = (path) => {
@@ -14,10 +15,26 @@ const getImageUrl = (path) => {
     return `/storage/${cleanPath}`;
 };
 
+const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const cleanDate = dateString.includes('T') ? dateString.split('T')[0] : dateString;
+    const parts = cleanDate.split('-');
+    if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        return d.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+        });
+    }
+    return dateString;
+};
+
 export default function EmployeeDetailTabs({ employee, isAdmin = false, onUploadDocument, onDeleteDocument }) {
     const [activeTab, setActiveTab] = useState('profile');
     const [activeRiwayatSubTab, setActiveRiwayatSubTab] = useState('golongan');
     const [uploadingPhoto, setUploadingPhoto] = useState(false);
+    const [copiedNip, setCopiedNip] = useState(false);
 
     const handlePhotoUpload = (e) => {
         const file = e.target.files[0];
@@ -97,8 +114,9 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                 </div>
             </div>
 
-            {/* TAB CONTENT: PROFILE */}
-            {activeTab === 'profile' && (
+            {/* TAB CONTENT WRAPPER WITH SMOOTH TRANSITIONS */}
+            <div key={activeTab} className="page-enter">
+                {activeTab === 'profile' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <GlassCard className="p-6">
                         <h3 className="text-base font-bold text-slate-800 mb-4 border-b border-slate-100 pb-3 flex items-center gap-2">
@@ -141,7 +159,24 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                                     </span>
                                 )}
                                 <h4 className="font-bold text-slate-900 text-base leading-tight">{employee.name}</h4>
-                                <p className="text-xs text-slate-500 font-mono">NIP: {employee.nip || '-'}</p>
+                                <div className="text-xs text-slate-500 font-mono flex items-center gap-1.5 flex-wrap">
+                                    <span>NIP: {employee.nip || '-'}</span>
+                                    {employee.nip && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(employee.nip);
+                                                setCopiedNip(true);
+                                                setTimeout(() => setCopiedNip(false), 2000);
+                                            }}
+                                            className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded transition-colors"
+                                            title="Salin NIP"
+                                        >
+                                            {copiedNip ? <FiCheck className="w-3 h-3 text-emerald-600" /> : <FiCopy className="w-3 h-3" />}
+                                            <span>{copiedNip ? 'Tersalin' : 'Salin'}</span>
+                                        </button>
+                                    )}
+                                </div>
                                 <p className="text-xs text-slate-600">Status: <span className="font-semibold text-blue-600">{employee.status_pegawai}</span></p>
 
                                 <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl text-xs font-semibold cursor-pointer border border-blue-200 transition-colors shadow-xs">
@@ -165,12 +200,29 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 <dt className="font-medium text-slate-500">NIP</dt>
-                                <dd className="col-span-2 text-slate-800 font-mono">{employee.nip || '-'}</dd>
+                                <dd className="col-span-2 text-slate-800 font-mono flex items-center gap-2">
+                                    <span>{employee.nip || '-'}</span>
+                                    {employee.nip && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(employee.nip);
+                                                setCopiedNip(true);
+                                                setTimeout(() => setCopiedNip(false), 2000);
+                                            }}
+                                            className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200/80 px-2 py-0.5 rounded-lg transition-colors font-sans"
+                                            title="Salin NIP"
+                                        >
+                                            {copiedNip ? <FiCheck className="w-3 h-3 text-emerald-600" /> : <FiCopy className="w-3 h-3" />}
+                                            <span>{copiedNip ? 'Tersalin' : 'Salin NIP'}</span>
+                                        </button>
+                                    )}
+                                </dd>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 <dt className="font-medium text-slate-500">Tempat, Tgl Lahir</dt>
                                 <dd className="col-span-2 text-slate-800">
-                                    {employee.place_of_birth || '-'}{employee.date_of_birth ? `, ${employee.date_of_birth}` : ''}
+                                    {employee.place_of_birth || '-'}{employee.date_of_birth ? `, ${formatDate(employee.date_of_birth)}` : ''}
                                 </dd>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
@@ -203,11 +255,11 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 <dt className="font-medium text-slate-500">TMT CPNS</dt>
-                                <dd className="col-span-2 text-slate-800">{employee.cpns_date || '-'}</dd>
+                                <dd className="col-span-2 text-slate-800">{formatDate(employee.cpns_date)}</dd>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
                                 <dt className="font-medium text-slate-500">TMT PNS</dt>
-                                <dd className="col-span-2 text-slate-800">{employee.pns_date || '-'}</dd>
+                                <dd className="col-span-2 text-slate-800">{formatDate(employee.pns_date)}</dd>
                             </div>
                         </dl>
                     </GlassCard>
@@ -223,11 +275,11 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-3 text-sm">
                             <h4 className="font-bold text-slate-700 border-b pb-2">Status CPNS</h4>
-                            <div className="flex justify-between"><span className="text-slate-500">TMT CPNS:</span> <span className="font-medium">{employee.cpns_date || '-'}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">TMT CPNS:</span> <span className="font-medium">{formatDate(employee.cpns_date)}</span></div>
                         </div>
                         <div className="bg-slate-50/50 p-4 rounded-xl border border-slate-100 space-y-3 text-sm">
                             <h4 className="font-bold text-slate-700 border-b pb-2">Status PNS</h4>
-                            <div className="flex justify-between"><span className="text-slate-500">TMT PNS:</span> <span className="font-medium">{employee.pns_date || '-'}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">TMT PNS:</span> <span className="font-medium">{formatDate(employee.pns_date)}</span></div>
                         </div>
                     </div>
                 </GlassCard>
@@ -551,6 +603,7 @@ export default function EmployeeDetailTabs({ employee, isAdmin = false, onUpload
                     </GlassCard>
                 </div>
             )}
+            </div>
         </div>
     );
 }

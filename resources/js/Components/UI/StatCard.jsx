@@ -32,7 +32,7 @@ export default function StatCard({ title, value, icon: Icon, color = 'blue', des
     const style = colorStyles[color] || colorStyles.blue;
 
     return (
-        <div className="glass-card p-5 rounded-2xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
+        <div className="glass-card p-5 rounded-2xl transition-all duration-300 hover:shadow-md hover:-translate-y-0.5 select-none cursor-default">
             <div className="flex items-center justify-between">
                 <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</p>

@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Operator;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\EditAuthorization;
+use App\Models\DeletionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class EmployeeController extends Controller
@@ -20,7 +23,9 @@ class EmployeeController extends Controller
         $school = Auth::user()->school;
 
         // Query data pegawai khusus untuk sekolah operator tersebut
-        $query = Employee::with('school')->where('school_id', $school->id ?? 0);
+        $query = Employee::with(['school', 'deletionRequests' => function ($q) {
+            $q->where('status', 'pending')->latest();
+        }])->where('school_id', $school->id ?? 0);
 
         // Filter pencarian berdasarkan nama pegawai atau NIP
         if ($request->filled('search')) {
@@ -88,14 +93,57 @@ class EmployeeController extends Controller
     {
         $this->authorizeSchoolOwner($employee);
 
+        // Check if edit authorization (surat perintah) exists for this employee
+        $editAuthorization = EditAuthorization::where('employee_id', $employee->id)
+            ->where('school_id', Auth::user()->school_id)
+            ->latest()
+            ->first();
+
         return Inertia::render('Operator/Employees/Edit', [
-            'employee' => $employee
+            'employee' => $employee,
+            'editAuthorization' => $editAuthorization,
         ]);
+    }
+
+    public function storeEditAuthorization(Request $request, Employee $employee)
+    {
+        $this->authorizeSchoolOwner($employee);
+
+        $request->validate([
+            'surat_perintah' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $file = $request->file('surat_perintah');
+        $fileName = time() . '_surat_perintah_' . $file->getClientOriginalName();
+        $filePath = $file->storeAs('edit_authorizations', $fileName, 'public');
+
+        EditAuthorization::create([
+            'employee_id' => $employee->id,
+            'user_id' => Auth::id(),
+            'school_id' => Auth::user()->school_id,
+            'document_path' => $filePath,
+            'document_name' => $file->getClientOriginalName(),
+            'notes' => $request->notes,
+        ]);
+
+        return redirect()->back()->with('success', 'Surat Perintah berhasil diunggah. Silakan edit data pegawai.');
     }
 
     public function update(Request $request, Employee $employee)
     {
         $this->authorizeSchoolOwner($employee);
+
+        // Verify edit authorization exists
+        $hasAuthorization = EditAuthorization::where('employee_id', $employee->id)
+            ->where('school_id', Auth::user()->school_id)
+            ->exists();
+
+        if (!$hasAuthorization) {
+            return redirect()->back()->withErrors([
+                'authorization' => 'Anda harus mengunggah Surat Perintah dari Kepala Sekolah terlebih dahulu.'
+            ]);
+        }
 
         $validated = $request->validate([
             'nip' => 'nullable|string|unique:employees,nip,' . $employee->id,
@@ -113,8 +161,8 @@ class EmployeeController extends Controller
         if ($request->hasFile('photo')) {
             if ($employee->photo_path) {
                 $oldDiskPath = str_replace('/storage/', '', $employee->photo_path);
-                if (\Illuminate\Support\Facades\Storage::disk('public')->exists($oldDiskPath)) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($oldDiskPath);
+                if (Storage::disk('public')->exists($oldDiskPath)) {
+                    Storage::disk('public')->delete($oldDiskPath);
                 }
             }
             $validated['photo_path'] = $request->file('photo')->store('employee_photos', 'public');
@@ -126,12 +174,77 @@ class EmployeeController extends Controller
         return redirect()->route('operator.employees.show', $employee->id)->with('success', 'Data pegawai berhasil diperbarui.');
     }
 
+    public function archivedIndex(Request $request)
+    {
+        if (Auth::user()->role === 'admin') {
+            return redirect()->route('admin.employees.index');
+        }
+
+        $school = Auth::user()->school;
+
+        $query = Employee::onlyTrashed()
+            ->with(['school', 'deletionRequests' => function ($q) {
+                $q->latest();
+            }])
+            ->where('school_id', $school->id ?? 0);
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('nip', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $employees = $query->orderBy('deleted_at', 'desc')->paginate(15)->withQueryString();
+
+        return Inertia::render('Operator/Employees/Archived', [
+            'employees' => $employees,
+            'filters' => $request->only(['search']),
+        ]);
+    }
+
+    public function requestDeletion(Request $request, Employee $employee)
+    {
+        $this->authorizeSchoolOwner($employee);
+
+        // Check if there is already a pending deletion request
+        $existing = DeletionRequest::where('employee_id', $employee->id)
+            ->where('status', 'pending')
+            ->first();
+
+        if ($existing) {
+            return redirect()->back()->withErrors([
+                'deletion' => 'Pengajuan penghapusan untuk pegawai ini sudah pernah diajukan dan sedang menunggu persetujuan.'
+            ]);
+        }
+
+        $request->validate([
+            'surat_perintah' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $file = $request->file('surat_perintah');
+        $fileName = time() . '_hapus_' . $file->getClientOriginalName();
+        $filePath = $file->storeAs('deletion_requests', $fileName, 'public');
+
+        DeletionRequest::create([
+            'employee_id' => $employee->id,
+            'user_id' => Auth::id(),
+            'school_id' => Auth::user()->school_id,
+            'document_path' => $filePath,
+            'document_name' => $file->getClientOriginalName(),
+            'reason' => $request->reason,
+            'status' => 'pending',
+        ]);
+
+        return redirect()->back()->with('success', 'Pengajuan penghapusan berhasil dikirim. Menunggu persetujuan Admin/Dinas.');
+    }
+
     public function destroy(Employee $employee)
     {
-        if ($employee->school_id !== auth()->user()->school_id) abort(403);
-        $employee->delete();
-
-        return redirect()->route('operator.employees.index')->with('success', 'Data pegawai berhasil dihapus.');
+        return redirect()->back()->withErrors([
+            'deletion' => 'Penghapusan data pegawai harus melalui pengajuan persetujuan dengan Surat Perintah Kepala Sekolah.'
+        ]);
     }
 
     public function uploadDocument(Request $request, Employee $employee)
@@ -162,7 +275,7 @@ class EmployeeController extends Controller
         $document = \App\Models\EmployeeDocument::with('employee')->findOrFail($documentId);
         if ($document->employee->school_id !== auth()->user()->school_id) abort(403);
 
-        \Illuminate\Support\Facades\Storage::disk('public')->delete($document->file_path);
+        Storage::disk('public')->delete($document->file_path);
         $document->delete();
 
         return redirect()->back()->with('success', 'Dokumen berhasil dihapus.');

@@ -1,0 +1,23 @@
+// Standard Jabatan (Positions) in Schools (SD / SMP / SMA / Disdik KBB)
+export const SCHOOL_JABATAN_OPTIONS = [
+    'Kepala Sekolah',
+    'Guru Ahli Utama',
+    'Guru Ahli Madya',
+    'Guru Ahli Muda',
+    'Guru Ahli Pertama',
+    'Guru Kelas',
+    'Guru Kelas SD',
+    'Guru Mata Pelajaran',
+    'Guru PJOK',
+    'Guru Pendidikan Agama Islam',
+    'Guru Bimbingan Konseling (BK)',
+    'Guru Pendamping Khusus',
+    'Kepala Urusan Tata Usaha (Kaur TU)',
+    'Tenaga Administrasi Sekolah (TAS)',
+    'Pengelola Perpustakaan',
+    'Laboran / Pengelola Laboratorium',
+    'Operator Sekolah (OPS)',
+    'Penjaga Sekolah / Petugas Kebersihan',
+    'Petugas Keamanan (Satpam)',
+    'Staf Pelaksana',
+];

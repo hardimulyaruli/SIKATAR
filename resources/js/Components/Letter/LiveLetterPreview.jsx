@@ -63,15 +63,60 @@ export default function LiveLetterPreview({
         }
     };
 
-    const todayDate = new Date().toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
+    // Format letter date into Indonesian locale (e.g., "17 September 2026")
+    const formatIndonesianDate = (dateVal) => {
+        if (!dateVal) {
+            return new Date().toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+            });
+        }
+        try {
+            if (typeof dateVal === 'string' && dateVal.includes('-')) {
+                const [y, m, d] = dateVal.split('-');
+                if (y && m && d) {
+                    const parsed = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+                    return parsed.toLocaleDateString('id-ID', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                    });
+                }
+            }
+            const parsed = new Date(dateVal);
+            if (!isNaN(parsed.getTime())) {
+                return parsed.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric',
+                });
+            }
+        } catch (e) {
+            console.error('Error formatting date:', e);
+        }
+        return String(dateVal);
+    };
 
     const safeFormData = formData || {};
+
+    // Extract dynamic year from letter_date or fallback to current calendar year
+    const letterYear = (() => {
+        const raw = safeFormData.letter_date;
+        if (raw) {
+            if (typeof raw === 'string' && raw.includes('-')) {
+                const y = raw.split('-')[0];
+                if (y && y.length === 4) return y;
+            }
+            const parsed = new Date(raw);
+            if (!isNaN(parsed.getTime())) return parsed.getFullYear();
+        }
+        return new Date().getFullYear();
+    })();
+
+    const displayLetterDate = formatIndonesianDate(safeFormData.letter_date);
     const codeNumber = classificationCode || '800.1.3.2';
-    const displayLetterNumber = officialNumber || `${codeNumber}/1071 - Sekre/${new Date().getFullYear()}`;
+    const displayLetterNumber = officialNumber || `${codeNumber}/1071 - Sekre/${letterYear}`;
 
     // Extract Applicants List
     const baseApplicants = Array.isArray(safeFormData.applicants) && safeFormData.applicants.length > 0
@@ -100,7 +145,8 @@ export default function LiveLetterPreview({
         'applicants', 'jumlah_berkas', 'jumlah_orang',
         'nama_pegawai', 'nama_guru', 'nip', 'pangkat_golongan',
         'gol_asal', 'jabatan', 'unit_kerja', 'kecamatan',
-        'received_date', 'received_by_name', 'received_by_title', 'received_by_nip'
+        'received_date', 'received_by_name', 'received_by_title', 'received_by_nip',
+        'letter_date'
     ]);
 
     const customParams = Object.entries(safeFormData).filter(
@@ -176,7 +222,7 @@ export default function LiveLetterPreview({
 
                     {/* Top Right Date */}
                     <div className="text-right font-sans text-xs font-normal text-black mb-3">
-                        Bandung Barat, {todayDate}
+                        Bandung Barat, {displayLetterDate}
                     </div>
 
                     {/* Recipient Section (Top Left) */}
@@ -322,38 +368,48 @@ export default function LiveLetterPreview({
                     </div>
 
                     {/* Bottom Section: Receipts & Signatures (Matching User Reference Image) */}
-                    <div className="mt-6 flex justify-between items-start font-sans text-xs text-black">
+                    <div className="mt-8 flex justify-between items-stretch font-sans text-xs text-black min-h-[165px]">
                         {/* Left Section: Standard Reception Block (Dynamically filled when received/approved) */}
-                        <div className="w-56 space-y-0.5">
-                            {safeFormData.received_date || safeFormData.received_by_name || status === 'approved' || status === 'verified' || status === 'completed' ? (
-                                <>
-                                    <p className="font-normal text-black">Diterima Tanggal: <span className="font-semibold">{safeFormData.received_date || todayDate}</span></p>
-                                    <p className="font-normal text-black mt-1">Penerima,</p>
-                                    <p className="font-normal text-black text-[11px] leading-tight">{safeFormData.received_by_title || 'Pengolah Data Kepegawaian Disdik KBB'}</p>
-                                    <div className="pt-6">
-                                        <p className="font-bold underline uppercase text-black text-xs">{safeFormData.received_by_name || 'H. DEDI SUPRIADI, S.Pd., M.M.'}</p>
-                                        <p className="font-normal text-black text-[11px] mt-0.5">NIP. {safeFormData.received_by_nip || '19780512 200604 1 005'}</p>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <p className="font-normal text-black">Diterima Tanggal ..................</p>
-                                    <p className="font-normal text-black mt-2">Penerima</p>
-                                    <p className="font-normal text-black">Nama Jabatan,</p>
-                                    <div className="pt-8">
-                                        <p className="border-b border-black w-48"></p>
-                                        <p className="font-normal text-black">NIP.</p>
-                                    </div>
-                                </>
-                            )}
+                        <div className="w-60 flex flex-col justify-between text-left">
+                            <div>
+                                {safeFormData.received_date || safeFormData.received_by_name || status === 'approved' || status === 'verified' || status === 'completed' ? (
+                                    <>
+                                        <p className="font-normal text-black">Diterima Tanggal: <span className="font-semibold">{safeFormData.received_date || displayLetterDate}</span></p>
+                                        <p className="font-normal text-black mt-1">Penerima,</p>
+                                        <p className="font-normal text-black text-[11px] leading-tight text-slate-700">{safeFormData.received_by_title || 'Pengolah Data Kepegawaian Disdik KBB'}</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <p className="font-normal text-black">Diterima Tanggal ..................</p>
+                                        <p className="font-normal text-black mt-1">Penerima,</p>
+                                        <p className="font-normal text-black text-[11px] text-slate-700">Nama Jabatan,</p>
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="pt-2">
+                                {safeFormData.received_date || safeFormData.received_by_name || status === 'approved' || status === 'verified' || status === 'completed' ? (
+                                    <>
+                                        <p className="font-bold underline uppercase text-black text-xs leading-tight">{safeFormData.received_by_name || 'H. DEDI SUPRIADI, S.Pd., M.M.'}</p>
+                                        <p className="font-normal text-black text-[11px] mt-0.5 leading-tight">NIP. {safeFormData.received_by_nip || '19780512 200604 1 005'}</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="border-b border-black w-48 pb-0.5 mb-1 h-3"></div>
+                                        <p className="font-normal text-black text-[11px] leading-tight">NIP.</p>
+                                    </>
+                                )}
+                            </div>
                         </div>
 
                         {/* Right Section: Tanda Tangan Basah */}
-                        <div className="text-center w-64 flex flex-col items-center">
-                            <p className="font-bold text-xs mb-1 leading-none text-black">{signeeTitle}</p>
+                        <div className="text-center w-64 flex flex-col justify-between items-center">
+                            <div>
+                                <p className="font-bold text-xs leading-tight text-black">{signeeTitle}</p>
+                            </div>
 
                             {/* Wet Signature Image Container */}
-                            <div className="w-full h-20 flex items-center justify-center my-1">
+                            <div className="w-full h-20 flex items-center justify-center my-auto">
                                 {school?.signature_path && !sigError ? (
                                     <img
                                         src={getImageUrl(school.signature_path)}
@@ -366,10 +422,10 @@ export default function LiveLetterPreview({
                                 )}
                             </div>
 
-                            <div className="mt-1 text-center leading-tight">
+                            <div className="text-center leading-tight">
                                 <p className="font-bold uppercase border-b border-black pb-0.5 inline-block text-xs text-black">{signeeName}</p>
                                 {signeePangkat && <p className="text-[11px] text-black mt-0.5 font-normal">{signeePangkat}</p>}
-                                <p className="text-[11px] text-black font-normal">NIP. {signeeNip}</p>
+                                <p className="text-[11px] text-black font-normal mt-0.5">NIP. {signeeNip}</p>
                             </div>
                         </div>
                     </div>

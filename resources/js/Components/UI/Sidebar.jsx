@@ -11,6 +11,7 @@ export default function Sidebar({ isOpen = true, setIsOpen }) {
     const operatorNav = [
         { name: 'Dashboard', href: '/operator/dashboard', icon: 'drafts' },
         { name: 'Kepegawaian', href: '/operator/employees', icon: 'badge' },
+        { name: 'Arsip Pegawai', href: '/operator/employees-archived', icon: 'archive' },
         { name: 'Pengajuan', href: '/operator/applications/create', icon: 'add_card' },
         { name: 'Status Pengajuan', href: '/operator/applications', icon: 'inventory_2' },
     ];
@@ -18,7 +19,8 @@ export default function Sidebar({ isOpen = true, setIsOpen }) {
     const adminNav = [
         { name: 'Dashboard', href: '/admin/dashboard', icon: 'drafts' },
         { name: 'Kepegawaian', href: '/admin/employees', icon: 'badge' },
-        { name: 'Pengajuan', href: '/admin/applications', icon: 'gavel' },
+        { name: 'Pengajuan Surat', href: '/admin/applications', icon: 'gavel' },
+        { name: 'Pengajuan Hapus', href: '/admin/deletion-requests', icon: 'person_remove' },
         { name: 'Sekolah KBB', href: '/admin/schools', icon: 'school' },
     ];
 

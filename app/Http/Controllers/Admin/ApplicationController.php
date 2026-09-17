@@ -69,7 +69,12 @@ class ApplicationController extends Controller
                 $template = \App\Models\LetterTemplate::where('code', $application->template_code)->first();
                 $classCode = $template->classification_code ?? '800.1.3.2';
                 $sequence = str_pad(rand(100, 9999), 4, '0', STR_PAD_LEFT);
-                $updateData['official_letter_number'] = "{$classCode}/{$sequence}-Sekre/" . date('Y');
+                
+                // Dynamically extract year from letter_date in form_data_json, fallback to current calendar year
+                $letterDate = $application->form_data_json['letter_date'] ?? null;
+                $year = $letterDate ? date('Y', strtotime($letterDate)) : date('Y');
+
+                $updateData['official_letter_number'] = "{$classCode}/{$sequence}-Sekre/{$year}";
             } else {
                 $updateData['official_letter_number'] = $request->official_letter_number;
             }

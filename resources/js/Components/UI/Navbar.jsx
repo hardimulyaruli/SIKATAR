@@ -61,7 +61,7 @@ export default function Navbar({ role = 'operator', toggleSidebar }) {
                 >
                     <Icon name="menu" />
                 </button>
-                <div>
+                <div className="select-none cursor-default">
                     <h2 className="font-headline-md text-primary text-lg md:text-xl leading-tight">
                         {role === 'admin' ? 'Administrative Bureau' : (user?.school?.name || 'School Correspondence Portal')}
                     </h2>

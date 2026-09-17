@@ -19,57 +19,82 @@ export default function ApplicationTable({ applications = [], basePath = '/opera
             <table className="w-full text-left border-collapse font-body-md">
                 <thead>
                     <tr className="border-b border-outline/20 font-label-sm text-[10px] uppercase tracking-widest text-on-surface-variant">
-                        <th className="py-4 px-4 font-semibold">Ref Number / Date</th>
-                        <th className="py-4 px-4 font-semibold">School Authority</th>
-                        <th className="py-4 px-4 font-semibold">Directive Subject</th>
-                        <th className="py-4 px-4 font-semibold">Status Verification</th>
-                        <th className="py-4 px-4 text-right font-semibold">Action</th>
+                        <th className="py-4 px-4 font-semibold w-[20%]">Ref Number / Date</th>
+                        <th className="py-4 px-4 font-semibold w-[22%]">School Authority</th>
+                        <th className="py-4 px-4 font-semibold w-[38%]">Directive Subject</th>
+                        <th className="py-4 px-4 font-semibold w-[12%]">Status Verification</th>
+                        <th className="py-4 px-4 text-right font-semibold w-[8%]">Action</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-outline/10 text-xs">
-                    {applications.map((app) => (
-                        <tr key={app.id} className="hover:bg-surface-container-low/60 transition-colors group">
-                            <td className="py-4 px-4">
-                                <div className="font-mono font-semibold text-primary">{app.application_number}</div>
-                                <div className="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider mt-0.5 flex items-center gap-1">
-                                    <Icon name="calendar_today" className="text-[12px]" />
-                                    <span>{new Date(app.created_at).toLocaleDateString('id-ID')}</span>
-                                </div>
-                            </td>
+                    {applications.map((app) => {
+                        const formData = app.form_data_json || {};
+                        const applicants = Array.isArray(formData.applicants) && formData.applicants.length > 0
+                            ? formData.applicants
+                            : (formData.nama_pegawai ? [{ nama: formData.nama_pegawai, nip: formData.nip }] : []);
+                        const firstApp = applicants[0];
+                        const appCount = applicants.length || parseInt(formData.jumlah_berkas, 10) || 1;
 
-                            <td className="py-4 px-4">
-                                <div className="font-semibold text-primary flex items-center gap-1.5">
-                                    <Icon name="school" className="text-secondary text-sm" />
-                                    <span>{app.school?.name || 'Sekolah'}</span>
-                                </div>
-                                <div className="font-body-md text-[10px] text-on-surface-variant">NPSN: {app.school?.npsn}</div>
-                            </td>
+                        return (
+                            <tr key={app.id} className="hover:bg-surface-container-low/60 transition-colors group">
+                                <td className="py-4 px-4 align-top">
+                                    <div className="font-mono font-semibold text-primary">{app.application_number}</div>
+                                    <div className="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider mt-1 flex items-center gap-1">
+                                        <Icon name="calendar_today" className="text-[12px]" />
+                                        <span>{new Date(app.created_at).toLocaleDateString('id-ID')}</span>
+                                    </div>
+                                </td>
 
-                            <td className="py-4 px-4 max-w-xs">
-                                <div className="font-headline-md text-primary text-base font-normal line-clamp-1 group-hover:text-secondary transition-colors">{app.subject}</div>
-                                <div className="font-label-sm text-[10px] text-on-surface-variant uppercase tracking-wider line-clamp-1">{app.letter_name}</div>
-                            </td>
+                                <td className="py-4 px-4 align-top">
+                                    <div className="font-semibold text-primary flex items-center gap-1.5 leading-snug">
+                                        <Icon name="school" className="text-secondary text-sm shrink-0" />
+                                        <span>{app.school?.name || 'Sekolah'}</span>
+                                    </div>
+                                    <div className="font-body-md text-[10px] text-on-surface-variant mt-0.5">NPSN: {app.school?.npsn}</div>
+                                </td>
 
-                            <td className="py-4 px-4">
-                                <BadgeStatus status={app.status} />
-                                {app.admin_notes && (
-                                    <p className="text-[10px] text-error italic mt-1 line-clamp-1">
-                                        Note: "{app.admin_notes}"
-                                    </p>
-                                )}
-                            </td>
+                                <td className="py-4 px-4 align-top min-w-[280px]">
+                                    {/* Main Subject / Perihal Line - Full & Clear */}
+                                    <div className="font-bold text-primary text-sm leading-snug group-hover:text-secondary transition-colors whitespace-normal break-words">
+                                        {app.subject}
+                                    </div>
 
-                            <td className="py-4 px-4 text-right">
-                                <Link
-                                    href={`${basePath}/${app.id}`}
-                                    className="inline-flex items-center gap-1 font-label-sm text-xs text-primary uppercase tracking-widest hover:underline underline-offset-4 font-semibold"
-                                >
-                                    <span>Review</span>
-                                    <Icon name="arrow_forward" className="text-xs" />
-                                </Link>
-                            </td>
-                        </tr>
-                    ))}
+                                    {/* Subtitle / Jenis Template Surat - Clear & Full */}
+                                    <div className="mt-1 font-semibold text-[11px] text-slate-600 uppercase tracking-wide leading-normal whitespace-normal break-words">
+                                        {app.letter_name}
+                                    </div>
+
+                                    {/* Applicant Details Summary if available */}
+                                    {firstApp?.nama && (
+                                        <div className="mt-1.5 text-[11px] text-blue-900 bg-blue-50/80 px-2 py-1 rounded border border-blue-100 leading-tight inline-block">
+                                            <span className="font-bold">Pemohon:</span> {firstApp.nama}
+                                            {firstApp.nip ? <span className="font-mono text-[10px] text-slate-600 ml-1">({firstApp.nip})</span> : ''}
+                                            {appCount > 1 ? <span className="font-bold text-blue-700 ml-1">cs {appCount} Orang</span> : ''}
+                                        </div>
+                                    )}
+                                </td>
+
+                                <td className="py-4 px-4 align-top">
+                                    <BadgeStatus status={app.status} />
+                                    {app.admin_notes && (
+                                        <p className="text-[11px] text-error font-medium italic mt-1.5 leading-tight whitespace-normal break-words">
+                                            Note: "{app.admin_notes}"
+                                        </p>
+                                    )}
+                                </td>
+
+                                <td className="py-4 px-4 text-right align-top">
+                                    <Link
+                                        href={`${basePath}/${app.id}`}
+                                        className="inline-flex items-center gap-1 font-label-sm text-xs text-primary uppercase tracking-widest hover:underline underline-offset-4 font-semibold"
+                                    >
+                                        <span>Review</span>
+                                        <Icon name="arrow_forward" className="text-xs" />
+                                    </Link>
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
         </div>

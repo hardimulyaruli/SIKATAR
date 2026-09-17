@@ -99,6 +99,18 @@ export default function ApplicationShow({ application, school }) {
 
                             <div>
                                 <label className="block font-label-sm text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">
+                                    Tanggal Surat Pengantar
+                                </label>
+                                <input
+                                    type="date"
+                                    value={data.form_data?.letter_date || ''}
+                                    onChange={(e) => handleCustomParamChange('letter_date', e.target.value)}
+                                    className="editorial-input-line text-xs"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block font-label-sm text-[10px] uppercase tracking-widest text-on-surface-variant mb-1">
                                     Recipient Name
                                 </label>
                                 <input

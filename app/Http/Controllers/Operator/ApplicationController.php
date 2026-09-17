@@ -54,10 +54,24 @@ class ApplicationController extends Controller
             $selectedTemplate = $templates->first();
         }
 
+        $employees = \App\Models\Employee::with(['school', 'jobHistories'])->get()->map(function ($emp) {
+            $latestJob = $emp->jobHistories->first();
+            return [
+                'id' => $emp->id,
+                'nip' => $emp->nip,
+                'nama' => $emp->name,
+                'gol_asal' => $latestJob->pangkat_golongan ?? '',
+                'jabatan' => $latestJob->jabatan ?? '',
+                'unit_kerja' => $latestJob->unit_kerja ?? ($emp->school->name ?? ''),
+                'kecamatan' => $emp->school->district ?? '',
+            ];
+        });
+
         return Inertia::render('Operator/Applications/Create', [
             'school' => $school,
             'templates' => $templates,
             'selectedTemplate' => $selectedTemplate,
+            'employees' => $employees,
         ]);
     }
 
