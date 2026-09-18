@@ -19,6 +19,14 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Force Change Password (pertama kali login)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/force-change-password', [\App\Http\Controllers\Auth\ForceChangePasswordController::class, 'show'])
+        ->name('password.force-change');
+    Route::post('/force-change-password', [\App\Http\Controllers\Auth\ForceChangePasswordController::class, 'update'])
+        ->name('password.force-update');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Role-based Dashboard Redirect
     Route::get('/dashboard', function () {

@@ -69,6 +69,7 @@ class SchoolController extends Controller
             'password' => \Illuminate\Support\Facades\Hash::make($request->password),
             'role' => 'operator',
             'school_id' => $school->id,
+            'must_change_password' => true,
         ]);
 
         return redirect()->back()->with('success', 'Sekolah baru dan Akun Operator berhasil dibuat!');
@@ -88,6 +89,7 @@ class SchoolController extends Controller
             'password' => \Illuminate\Support\Facades\Hash::make($request->password),
             'role' => 'operator',
             'school_id' => $school->id,
+            'must_change_password' => true,
         ]);
 
         return redirect()->back()->with('success', 'Akun Operator baru untuk ' . $school->name . ' berhasil dibuat!');
