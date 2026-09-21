@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import OperatorLayout from '@/Layouts/OperatorLayout';
 import PageHeader from '@/Components/UI/PageHeader';
 import SearchFilter from '@/Components/UI/SearchFilter';
@@ -6,6 +6,7 @@ import GlassCard from '@/Components/UI/GlassCard';
 import Pagination from '@/Components/UI/Pagination';
 import TableWrapper from '@/Components/UI/TableWrapper';
 import { useAsyncTable } from '@/Hooks/useAsyncTable';
+import { useEmployeeDeleteModal } from '@/Hooks/useEmployeeDeleteModal';
 import EmployeeActionBar from './Partials/EmployeeActionBar';
 import OperatorEmployeeTable from './Partials/OperatorEmployeeTable';
 import RequestDeletionModal from './Partials/RequestDeletionModal';
@@ -26,7 +27,11 @@ export default function EmployeesIndex({ employees: initialEmployees, filters: i
         },
     });
 
-    const [deleteModalEmployee, setDeleteModalEmployee] = useState(null);
+    const {
+        targetEmployee,
+        openDeleteModal,
+        closeDeleteModal,
+    } = useEmployeeDeleteModal();
 
     return (
         <OperatorLayout>
@@ -48,7 +53,7 @@ export default function EmployeesIndex({ employees: initialEmployees, filters: i
                 <TableWrapper isLoading={isLoading} loadingText="Memuat data pegawai..." className="mt-4">
                     <OperatorEmployeeTable
                         employees={employees.data}
-                        onOpenDeleteModal={(emp) => setDeleteModalEmployee(emp)}
+                        onOpenDeleteModal={openDeleteModal}
                     />
                 </TableWrapper>
 
@@ -56,8 +61,8 @@ export default function EmployeesIndex({ employees: initialEmployees, filters: i
             </GlassCard>
 
             <RequestDeletionModal
-                employee={deleteModalEmployee}
-                onClose={() => setDeleteModalEmployee(null)}
+                employee={targetEmployee}
+                onClose={closeDeleteModal}
             />
         </OperatorLayout>
     );

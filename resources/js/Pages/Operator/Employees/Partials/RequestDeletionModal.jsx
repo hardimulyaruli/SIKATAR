@@ -1,30 +1,16 @@
 import React from 'react';
-import { useForm } from '@inertiajs/react';
 import { FiTrash2, FiX, FiAlertTriangle, FiFileText, FiUpload } from 'react-icons/fi';
+import { useRequestDeletionForm } from '@/Hooks/useRequestDeletionForm';
 
 /**
  * RequestDeletionModal allows an operator to submit an authorization request
  * to delete and archive an employee, requiring official Headmaster Letter upload.
- * Single Responsibility: File attachment, reason inputs, and deletion request submission.
+ * Single Responsibility: Modal presentation with state delegated to useRequestDeletionForm.
  */
 export default function RequestDeletionModal({ employee, onClose }) {
-    const { data, setData, post, processing, errors, reset } = useForm({
-        surat_perintah: null,
-        reason: '',
-    });
+    const { data, setData, processing, errors, submit: handleSubmit } = useRequestDeletionForm(employee, onClose);
 
     if (!employee) return null;
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        post(`/operator/employees/${employee.id}/request-deletion`, {
-            forceFormData: true,
-            onSuccess: () => {
-                reset();
-                onClose();
-            },
-        });
-    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">

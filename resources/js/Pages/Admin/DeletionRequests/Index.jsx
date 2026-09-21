@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import PageHeader from '@/Components/UI/PageHeader';
 import SearchFilter from '@/Components/UI/SearchFilter';
@@ -6,6 +6,7 @@ import GlassCard from '@/Components/UI/GlassCard';
 import Pagination from '@/Components/UI/Pagination';
 import TableWrapper from '@/Components/UI/TableWrapper';
 import { useAsyncTable } from '@/Hooks/useAsyncTable';
+import { useDeletionModals } from '@/Hooks/useDeletionModals';
 import DeletionRequestTable from './Partials/DeletionRequestTable';
 import ApproveDeletionModal from './Partials/ApproveDeletionModal';
 import RejectDeletionModal from './Partials/RejectDeletionModal';
@@ -28,9 +29,14 @@ export default function DeletionRequestsIndex({ requests: initialRequests, filte
         },
     });
 
-    // Modals
-    const [approveModalReq, setApproveModalReq] = useState(null);
-    const [rejectModalReq, setRejectModalReq] = useState(null);
+    const {
+        approveModalReq,
+        rejectModalReq,
+        openApproveModal,
+        closeApproveModal,
+        openRejectModal,
+        closeRejectModal,
+    } = useDeletionModals();
 
     const statusOptions = [
         { label: 'Semua Status', value: '' },
@@ -60,8 +66,8 @@ export default function DeletionRequestsIndex({ requests: initialRequests, filte
                 <TableWrapper isLoading={isLoading} loadingText="Memuat permohonan..." className="mt-4">
                     <DeletionRequestTable
                         requests={requests.data}
-                        onApprove={(req) => setApproveModalReq(req)}
-                        onReject={(req) => setRejectModalReq(req)}
+                        onApprove={openApproveModal}
+                        onReject={openRejectModal}
                     />
                 </TableWrapper>
 
@@ -70,12 +76,12 @@ export default function DeletionRequestsIndex({ requests: initialRequests, filte
 
             <ApproveDeletionModal
                 request={approveModalReq}
-                onClose={() => setApproveModalReq(null)}
+                onClose={closeApproveModal}
             />
 
             <RejectDeletionModal
                 request={rejectModalReq}
-                onClose={() => setRejectModalReq(null)}
+                onClose={closeRejectModal}
             />
         </AdminLayout>
     );

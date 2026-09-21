@@ -1,27 +1,19 @@
 import React from 'react';
-import { useForm } from '@inertiajs/react';
 import { FiX } from 'react-icons/fi';
+import { useDeletionDecisionForm } from '@/Hooks/useDeletionDecisionForm';
 
 /**
  * RejectDeletionModal handles admin rejection of an employee deletion request.
- * Single Responsibility: Confirm rejection, require rejection reason, and submit PATCH request.
+ * Single Responsibility: Modal presentation with state delegated to useDeletionDecisionForm.
  */
 export default function RejectDeletionModal({ request, onClose }) {
-    const { data, setData, patch, processing, errors, reset } = useForm({
-        admin_notes: '',
+    const { data, setData, processing, errors, submit: handleSubmit } = useDeletionDecisionForm({
+        request,
+        action: 'reject',
+        onSuccessCallback: onClose,
     });
 
     if (!request) return null;
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        patch(`/admin/deletion-requests/${request.id}/reject`, {
-            onSuccess: () => {
-                reset();
-                onClose();
-            },
-        });
-    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">

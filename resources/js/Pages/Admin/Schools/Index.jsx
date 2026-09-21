@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import AdminLayout from '@/Layouts/AdminLayout';
 import PageHeader from '@/Components/UI/PageHeader';
 import SearchFilter from '@/Components/UI/SearchFilter';
@@ -6,6 +6,7 @@ import GlassCard from '@/Components/UI/GlassCard';
 import Pagination from '@/Components/UI/Pagination';
 import TableWrapper from '@/Components/UI/TableWrapper';
 import { useAsyncTable } from '@/Hooks/useAsyncTable';
+import { useModalState } from '@/Hooks/useModalState';
 import SchoolTable from './Partials/SchoolTable';
 import CreateSchoolModal from './Partials/CreateSchoolModal';
 
@@ -27,7 +28,11 @@ export default function SchoolsIndex({ schools: initialSchools, filters: initial
         },
     });
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const {
+        isOpen: isModalOpen,
+        openModal: handleOpenModal,
+        closeModal: handleCloseModal,
+    } = useModalState(false);
 
     const jenjangOptions = [
         { label: 'SD (Sekolah Dasar)', value: 'SD' },
@@ -43,7 +48,7 @@ export default function SchoolsIndex({ schools: initialSchools, filters: initial
                 subtitle="Kelola data sekolah dan buat akun login operator untuk seluruh sekolah di Kabupaten Bandung Barat."
                 action={
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={handleOpenModal}
                         className="px-4 py-2.5 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
                     >
                         <span>+ Tambah Akun Sekolah Baru</span>
@@ -71,7 +76,7 @@ export default function SchoolsIndex({ schools: initialSchools, filters: initial
 
             <CreateSchoolModal
                 isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                onClose={handleCloseModal}
             />
         </AdminLayout>
     );

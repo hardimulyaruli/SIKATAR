@@ -1,27 +1,19 @@
 import React from 'react';
-import { useForm } from '@inertiajs/react';
 import { FiX, FiCheck } from 'react-icons/fi';
+import { useDeletionDecisionForm } from '@/Hooks/useDeletionDecisionForm';
 
 /**
  * ApproveDeletionModal handles admin approval of an employee deletion request.
- * Single Responsibility: Confirm approval, capture optional admin notes, and submit PATCH request.
+ * Single Responsibility: Modal presentation with state delegated to useDeletionDecisionForm.
  */
 export default function ApproveDeletionModal({ request, onClose }) {
-    const { data, setData, patch, processing, reset } = useForm({
-        admin_notes: '',
+    const { data, setData, processing, submit: handleSubmit } = useDeletionDecisionForm({
+        request,
+        action: 'approve',
+        onSuccessCallback: onClose,
     });
 
     if (!request) return null;
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        patch(`/admin/deletion-requests/${request.id}/approve`, {
-            onSuccess: () => {
-                reset();
-                onClose();
-            },
-        });
-    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">

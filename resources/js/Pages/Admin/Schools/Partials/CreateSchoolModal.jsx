@@ -1,77 +1,21 @@
-import React, { useState } from 'react';
-import { router } from '@inertiajs/react';
-import { sanitizeNip, findEmployeeByNip, lookupEmployeeApi } from '@/Utils/employeeLookup';
+import React from 'react';
+import { useCreateSchoolForm } from '@/Hooks/useCreateSchoolForm';
 
 /**
  * CreateSchoolModal handles registering a new school and creating the default operator account.
- * Single Responsibility: Form input, validation, headmaster NIP auto-lookup, and account creation request.
+ * Single Responsibility: Form presentation with state delegated to useCreateSchoolForm.
  */
 export default function CreateSchoolModal({ isOpen, onClose }) {
-    const initialFormState = {
-        npsn: '',
-        name: '',
-        jenjang: 'SD',
-        status_akreditasi: 'A',
-        address: '',
-        phone: '',
-        email: '',
-        headmaster_name: '',
-        headmaster_nip: '',
-        operator_name: '',
-        operator_email: '',
-        password: '',
-    };
-
-    const [formData, setFormData] = useState(initialFormState);
-    const [processing, setProcessing] = useState(false);
-    const [errors, setErrors] = useState({});
+    const {
+        formData,
+        setFormData,
+        handleNipChange,
+        processing,
+        errors,
+        submit: handleSubmit,
+    } = useCreateSchoolForm(onClose);
 
     if (!isOpen) return null;
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        setProcessing(true);
-        setErrors({});
-
-        router.post('/admin/schools', formData, {
-            onSuccess: () => {
-                setProcessing(false);
-                setFormData(initialFormState);
-                onClose();
-            },
-            onError: (err) => {
-                setErrors(err);
-                setProcessing(false);
-            }
-        });
-    };
-
-    const handleNipChange = (e) => {
-        const cleanNip = sanitizeNip(e.target.value);
-        const emp = findEmployeeByNip(cleanNip);
-
-        setFormData((prev) => {
-            const next = {
-                ...prev,
-                headmaster_nip: cleanNip,
-                ...(emp && emp.nama ? { headmaster_name: emp.nama } : {})
-            };
-
-            if (cleanNip.length >= 8) {
-                lookupEmployeeApi(cleanNip).then((apiEmp) => {
-                    if (apiEmp && (apiEmp.nama || apiEmp.name)) {
-                        setFormData((cur) => ({
-                            ...cur,
-                            headmaster_nip: cleanNip,
-                            headmaster_name: apiEmp.nama || apiEmp.name,
-                        }));
-                    }
-                });
-            }
-
-            return next;
-        });
-    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
