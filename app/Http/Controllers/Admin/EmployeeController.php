@@ -40,6 +40,14 @@ class EmployeeController extends Controller
         $employees = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
         $schools = School::orderBy('name')->get(['id', 'name']);
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'employees' => $employees,
+                'schools' => $schools,
+                'filters' => $request->only(['search', 'school_id', 'status_pegawai']),
+            ]);
+        }
+
         return Inertia::render('Admin/Employees/Index', [
             'employees' => $employees,
             'schools' => $schools,

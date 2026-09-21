@@ -27,6 +27,13 @@ class SchoolController extends Controller
 
         $schools = $query->latest()->paginate(10)->withQueryString();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'schools' => $schools,
+                'filters' => $request->only(['search', 'jenjang']),
+            ]);
+        }
+
         return Inertia::render('Admin/Schools/Index', [
             'schools' => $schools,
             'filters' => $request->only(['search', 'jenjang']),

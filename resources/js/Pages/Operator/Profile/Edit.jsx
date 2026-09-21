@@ -4,10 +4,16 @@ import PageHeader from '@/Components/UI/PageHeader';
 import GlassCard from '@/Components/UI/GlassCard';
 import HeaderKopSurat from '@/Components/Letter/HeaderKopSurat';
 import { useForm, Link } from '@inertiajs/react';
-import { FiSave, FiUpload, FiHome, FiUser, FiCheckCircle } from 'react-icons/fi';
+import { FiSave, FiUpload, FiHome, FiUser, FiCheckCircle, FiSliders } from 'react-icons/fi';
 import { getImageUrl } from '@/Components/Letter/HeaderKopSurat';
 import { sanitizeNip, findEmployeeByNip, lookupEmployeeApi } from '@/Utils/employeeLookup';
+import SignatureExtractorModal from '@/Components/Signature/SignatureExtractorModal';
+import { autoExtractSignature } from '@/Utils/signatureProcessor';
+import { generateSchoolStampDataUrl } from '@/Utils/stampGenerator';
+
 export default function ProfileEdit({ school }) {
+    const defaultSampleStamp = generateSchoolStampDataUrl(school?.name || 'SD NEGERI 1 PADALARANG');
+
     const { data, setData, post, processing, errors, recentlySuccessful } = useForm({
         name: school?.name || '',
         npsn: school?.npsn || '',
@@ -20,10 +26,16 @@ export default function ProfileEdit({ school }) {
         headmaster_nip: school?.headmaster_nip || '',
         logo: null,
         signature: null,
+        stamp: null,
     });
 
     const [previewLogo, setPreviewLogo] = useState(school?.logo_kop_path ? getImageUrl(school.logo_kop_path) : null);
     const [previewSignature, setPreviewSignature] = useState(school?.signature_path ? getImageUrl(school.signature_path) : null);
+    const [previewStamp, setPreviewStamp] = useState(school?.stamp_path ? getImageUrl(school.stamp_path) : defaultSampleStamp);
+    const [rawSigFile, setRawSigFile] = useState(null);
+    const [isSigModalOpen, setIsSigModalOpen] = useState(false);
+    const [isExtractingSig, setIsExtractingSig] = useState(false);
+    const [isExtractingStamp, setIsExtractingStamp] = useState(false);
 
     useEffect(() => {
         if (school?.logo_kop_path) {
@@ -45,11 +57,45 @@ export default function ProfileEdit({ school }) {
         }
     };
 
-    const handleSignatureChange = (e) => {
+    // Alur 100% Otomatis: Langsung bersihkan & transparan saat file dipilih
+    const handleSignatureChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            setData('signature', file);
-            setPreviewSignature(URL.createObjectURL(file));
+            setRawSigFile(file);
+            setIsExtractingSig(true);
+            try {
+                const result = await autoExtractSignature(file);
+                setData('signature', result.file);
+                setPreviewSignature(result.previewUrl);
+            } catch (err) {
+                console.error('Ekstraksi otomatis gagal, fallback ke studio manual:', err);
+                setIsSigModalOpen(true);
+            } finally {
+                setIsExtractingSig(false);
+            }
+        }
+    };
+
+    const handleSaveCleanSignature = (cleanFile, cleanPreviewUrl) => {
+        setData('signature', cleanFile);
+        setPreviewSignature(cleanPreviewUrl);
+    };
+
+    const handleStampChange = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setIsExtractingStamp(true);
+            try {
+                const result = await autoExtractSignature(file);
+                setData('stamp', result.file);
+                setPreviewStamp(result.previewUrl);
+            } catch (err) {
+                console.error('Ekstraksi cap otomatis gagal:', err);
+                setData('stamp', file);
+                setPreviewStamp(URL.createObjectURL(file));
+            } finally {
+                setIsExtractingStamp(false);
+            }
         }
     };
 
@@ -280,12 +326,35 @@ export default function ProfileEdit({ school }) {
 
                         {/* Upload Sampel Tanda Tangan Basah */}
                         <div className="pt-2 border-t border-slate-100">
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
-                                Upload Sampel Tanda Tangan Basah Kepala Sekolah:
-                            </label>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Upload Sampel Tanda Tangan Basah Kepala Sekolah:
+                                </label>
+                                {rawSigFile && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSigModalOpen(true)}
+                                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md hover:bg-blue-100 transition-colors"
+                                    >
+                                        <FiSliders size={12} />
+                                        <span>Buka Studio Pembersih TTD</span>
+                                    </button>
+                                )}
+                            </div>
                             <div className="flex items-center gap-4">
-                                <div className="w-24 h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 p-1">
-                                    {previewSignature ? (
+                                <div
+                                    className="w-28 h-16 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 p-1 relative"
+                                    style={{
+                                        backgroundImage: previewSignature
+                                            ? `linear-gradient(45deg, #f1f5f9 25%, transparent 25%), linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f1f5f9 75%), linear-gradient(-45deg, transparent 75%, #f1f5f9 75%)`
+                                            : 'none',
+                                        backgroundSize: '12px 12px',
+                                        backgroundPosition: '0 0, 0 6px, 6px -6px, -6px 0px',
+                                    }}
+                                >
+                                    {isExtractingSig ? (
+                                        <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                                    ) : previewSignature ? (
                                         <img src={previewSignature} alt="Sampel TTD Basah Preview" className="w-full h-full object-contain" />
                                     ) : (
                                         <span className="text-[10px] text-slate-400 text-center">TTE / Kosong</span>
@@ -298,8 +367,52 @@ export default function ProfileEdit({ school }) {
                                         onChange={handleSignatureChange}
                                         className="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                                     />
-                                    <p className="text-[10px] text-slate-400 mt-1">Format PNG / JPG (Maks. 2MB). Disarankan tanda tangan di atas kertas putih / berlatar transparan.</p>
+                                    <p className="text-[10px] text-slate-400 mt-1">
+                                        Pilih foto dari HP/kamera. Latar belakang kertas akan langsung dihapus bersih secara transparan tanpa perlu edit manual.
+                                    </p>
                                     {errors.signature && <p className="text-[11px] text-rose-500 mt-1">{errors.signature}</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Upload Cap / Stempel Resmi Sekolah */}
+                        <div className="pt-2 border-t border-slate-100">
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                                    Cap / Stempel Resmi Sekolah (Opsional):
+                                </label>
+                                <span className="text-[10px] text-purple-700 font-semibold bg-purple-50 px-2 py-0.5 rounded">
+                                    {school?.stamp_path ? 'Cap Kustom Tersimpan' : 'Menggunakan Sampel Resmi Otomatis'}
+                                </span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div
+                                    className="w-20 h-20 rounded-xl border border-purple-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 p-1 relative"
+                                    style={{
+                                        backgroundImage: `linear-gradient(45deg, #f8fafc 25%, transparent 25%), linear-gradient(-45deg, #f8fafc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f8fafc 75%), linear-gradient(-45deg, transparent 75%, #f8fafc 75%)`,
+                                        backgroundSize: '10px 10px',
+                                        backgroundPosition: '0 0, 0 5px, 5px -5px, -5px 0px',
+                                    }}
+                                >
+                                    {isExtractingStamp ? (
+                                        <div className="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                                    ) : previewStamp ? (
+                                        <img src={previewStamp} alt="Cap Stempel Sekolah Preview" className="w-full h-full object-contain -rotate-3" />
+                                    ) : (
+                                        <span className="text-[10px] text-slate-400">Belum Ada Cap</span>
+                                    )}
+                                </div>
+                                <div className="flex-1">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleStampChange}
+                                        className="text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                                    />
+                                    <p className="text-[10px] text-slate-400 mt-1">
+                                        Jika belum mengunggah stempel fisik, sistem otomatis menggunakan <strong>Sampel Stempel Resmi</strong> sesuai nama sekolah. Foto cap basah akan otomatis dibersihkan latarnya menjadi transparan.
+                                    </p>
+                                    {errors.stamp && <p className="text-[11px] text-rose-500 mt-1">{errors.stamp}</p>}
                                 </div>
                             </div>
                         </div>
@@ -332,6 +445,17 @@ export default function ProfileEdit({ school }) {
                     </div>
                 </GlassCard>
             </div>
+
+            {/* Modal Studio Pembersih Tanda Tangan */}
+            <SignatureExtractorModal
+                isOpen={isSigModalOpen}
+                onClose={() => setIsSigModalOpen(false)}
+                rawImageFile={rawSigFile}
+                onSave={handleSaveCleanSignature}
+                headmasterName={data.headmaster_name || school?.headmaster_name}
+                headmasterNip={data.headmaster_nip || school?.headmaster_nip}
+                schoolTitle="Kepala Sekolah"
+            />
         </OperatorLayout>
     );
 }

@@ -21,6 +21,7 @@ class School extends Model
         'headmaster_nip',
         'logo_kop_path',
         'signature_path',
+        'stamp_path',
     ];
 
     public function users()

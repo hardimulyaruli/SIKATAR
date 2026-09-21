@@ -4,6 +4,7 @@ import Icon from '@/Components/UI/Icon';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { terbilang } from '@/Utils/terbilang';
+import { generateSchoolStampDataUrl } from '@/Utils/stampGenerator';
 
 export default function LiveLetterPreview({
     school,
@@ -17,13 +18,54 @@ export default function LiveLetterPreview({
     officialNumber = null,
     status = 'draft',
     isDisdik = false,
+    customSignature = null,
+    customStamp = undefined,
 }) {
     const letterRef = useRef(null);
     const [sigError, setSigError] = useState(false);
+    const [stampError, setStampError] = useState(false);
+
+    // Prioritas Tanda Tangan: customSignature -> formData.custom_signature_path -> school.signature_path
+    const activeSignatureSrc = customSignature 
+        ? customSignature 
+        : (formData?.custom_signature_path 
+            ? getImageUrl(formData.custom_signature_path) 
+            : (school?.signature_path ? getImageUrl(school.signature_path) : null));
+
+    // Prioritas Cap/Stempel:
+    // Cap HANYA boleh muncul jika secara eksplisit dipilih atau tersimpan di surat!
+    // Tidak boleh otomatis menempel di semua surat lama.
+    const activeStampSrc = (() => {
+        // 1. Jika di-preview secara eksplisit di komponen (misal saat Create/Edit)
+        if (customStamp !== undefined) {
+            if (!customStamp || customStamp === 'none') return null;
+            return customStamp;
+        }
+
+        // 2. Jika tersimpan di surat yang sudah diajukan (Show.jsx):
+        // a. Jika ada file cap kustom yang tersimpan di surat ini
+        if (formData?.custom_stamp_path) {
+            return getImageUrl(formData.custom_stamp_path);
+        }
+
+        // b. Jika saat pembuatan surat, operator secara eksplisit memilih opsi sampel cap
+        if (formData?.stamp_mode === 'sample') {
+            return school?.stamp_path
+                ? getImageUrl(school.stamp_path)
+                : generateSchoolStampDataUrl(school?.name || 'SD NEGERI 1 PADALARANG');
+        }
+
+        // 3. Surat lama / surat tanpa cap: TIDAK ADA CAP! (Default Bersih)
+        return null;
+    })();
 
     useEffect(() => {
         setSigError(false);
-    }, [school?.signature_path]);
+    }, [school?.signature_path, customSignature, formData?.custom_signature_path]);
+
+    useEffect(() => {
+        setStampError(false);
+    }, [school?.stamp_path, customStamp, formData?.custom_stamp_path]);
 
     const handlePrint = () => {
         window.print();
@@ -387,7 +429,20 @@ export default function LiveLetterPreview({
                                 )}
                             </div>
 
-                            <div className="pt-2">
+                            {/* Tanda Tangan Penerima Disdik (HANYA jika diisi oleh Disdik) */}
+                            <div className="w-48 h-20 flex items-center justify-start my-auto">
+                                {safeFormData.disdik_signature_path ? (
+                                    <img
+                                        src={getImageUrl(safeFormData.disdik_signature_path)}
+                                        alt="Tanda Tangan Penerima Disdik"
+                                        className="max-h-20 max-w-[180px] object-contain pointer-events-none select-none"
+                                    />
+                                ) : (
+                                    <div className="h-16"></div>
+                                )}
+                            </div>
+
+                            <div className="pt-1">
                                 {safeFormData.received_date || safeFormData.received_by_name || status === 'approved' || status === 'verified' || status === 'completed' ? (
                                     <>
                                         <p className="font-bold underline uppercase text-black text-xs leading-tight">{safeFormData.received_by_name || 'H. DEDI SUPRIADI, S.Pd., M.M.'}</p>
@@ -402,23 +457,34 @@ export default function LiveLetterPreview({
                             </div>
                         </div>
 
-                        {/* Right Section: Tanda Tangan Basah */}
-                        <div className="text-center w-64 flex flex-col justify-between items-center">
+                        {/* Right Section: Tanda Tangan Basah & Cap Stempel */}
+                        <div className="text-center w-64 flex flex-col justify-between items-center relative">
                             <div>
                                 <p className="font-bold text-xs leading-tight text-black">{signeeTitle}</p>
                             </div>
 
-                            {/* Wet Signature Image Container */}
-                            <div className="w-full h-20 flex items-center justify-center my-auto">
-                                {school?.signature_path && !sigError ? (
+                            {/* Wet Signature & Overlay Stamp Container */}
+                            <div className="w-full h-20 flex items-center justify-center my-auto relative">
+                                {/* Layer 1: Tanda Tangan Basah (z-0) */}
+                                {activeSignatureSrc && !sigError ? (
                                     <img
-                                        src={getImageUrl(school.signature_path)}
+                                        src={activeSignatureSrc}
                                         alt="Tanda Tangan Basah"
-                                        className="max-h-20 max-w-[200px] object-contain"
+                                        className="max-h-20 max-w-[200px] object-contain pointer-events-none select-none relative z-0"
                                         onError={() => setSigError(true)}
                                     />
                                 ) : (
                                     <div className="h-16"></div>
+                                )}
+
+                                {/* Layer 2: Cap Stempel Sekolah (z-10, ditimpa di atas TTD sebelah kiri) */}
+                                {activeStampSrc && !stampError && (
+                                    <img
+                                        src={activeStampSrc}
+                                        alt="Cap Stempel Sekolah"
+                                        className="absolute -left-1 md:left-1 top-1/2 -translate-y-1/2 w-24 h-24 max-w-[92px] max-h-[92px] object-contain pointer-events-none select-none z-10 -rotate-3 mix-blend-multiply opacity-90"
+                                        onError={() => setStampError(true)}
+                                    />
                                 )}
                             </div>
 
@@ -474,22 +540,33 @@ export default function LiveLetterPreview({
                             </table>
                         </div>
 
-                        {/* Lampiran Bottom Signature */}
+                        {/* Lampiran Bottom Signature & Stamp */}
                         <div className="mt-6 flex justify-end font-sans text-xs text-black">
-                            <div className="text-center w-64 flex flex-col items-center">
+                            <div className="text-center w-64 flex flex-col items-center relative">
                                 <p className="font-bold text-xs mb-1 leading-none text-black">{signeeTitle}</p>
 
-                                {/* Wet Signature Image Container */}
-                                <div className="w-full h-20 flex items-center justify-center my-1">
-                                    {school?.signature_path && !sigError ? (
+                                {/* Wet Signature & Overlay Stamp Container */}
+                                <div className="w-full h-20 flex items-center justify-center my-1 relative">
+                                    {/* Layer 1: Tanda Tangan Basah (z-0) */}
+                                    {activeSignatureSrc && !sigError ? (
                                         <img
-                                            src={getImageUrl(school.signature_path)}
+                                            src={activeSignatureSrc}
                                             alt="Tanda Tangan Basah"
-                                            className="max-h-20 max-w-[200px] object-contain"
+                                            className="max-h-20 max-w-[200px] object-contain pointer-events-none select-none relative z-0"
                                             onError={() => setSigError(true)}
                                         />
                                     ) : (
                                         <div className="h-16"></div>
+                                    )}
+
+                                    {/* Layer 2: Cap Stempel Ditimpa di Atas TTD */}
+                                    {activeStampSrc && !stampError && (
+                                        <img
+                                            src={activeStampSrc}
+                                            alt="Cap Stempel Sekolah"
+                                            className="absolute -left-1 md:left-1 top-1/2 -translate-y-1/2 w-24 h-24 max-w-[92px] max-h-[92px] object-contain pointer-events-none select-none z-10 -rotate-3 mix-blend-multiply opacity-90"
+                                            onError={() => setStampError(true)}
+                                        />
                                     )}
                                 </div>
 

@@ -275,40 +275,37 @@ export default function DynamicLetterForm({
 
                                 <div>
                                     <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">4. Jabatan</label>
-                                    <div className="space-y-1">
-                                        <select
-                                            value={SCHOOL_JABATAN_OPTIONS.includes(item.jabatan) ? item.jabatan : (item.jabatan ? '__CUSTOM__' : '')}
-                                            onChange={(e) => {
-                                                if (e.target.value !== '__CUSTOM__' && e.target.value !== '') {
-                                                    updateApplicant(idx, 'jabatan', e.target.value);
-                                                }
-                                            }}
-                                            className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
-                                        >
-                                            <option value="">-- Pilih Jabatan Sekolah --</option>
-                                            {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
-                                                <option key={jIdx} value={jbt}>
-                                                    {jbt}
-                                                </option>
-                                            ))}
-                                            {item.jabatan && !SCHOOL_JABATAN_OPTIONS.includes(item.jabatan) && (
-                                                <option value="__CUSTOM__">{item.jabatan} (Kustom)</option>
-                                            )}
-                                        </select>
+                                    <select
+                                        value={SCHOOL_JABATAN_OPTIONS.includes(item.jabatan) ? item.jabatan : (item.jabatan ? '__CUSTOM__' : '')}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === '__CUSTOM__') {
+                                                updateApplicant(idx, 'jabatan', '');
+                                            } else {
+                                                updateApplicant(idx, 'jabatan', val);
+                                            }
+                                        }}
+                                        className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800"
+                                    >
+                                        <option value="">-- Pilih Jabatan Sekolah --</option>
+                                        {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
+                                            <option key={jIdx} value={jbt}>
+                                                {jbt}
+                                            </option>
+                                        ))}
+                                        <option value="__CUSTOM__">Lainnya (Ketik Manual)</option>
+                                    </select>
+                                    {/* Text input hanya muncul jika jabatan tidak ada di daftar preset */}
+                                    {item.jabatan !== '' && !SCHOOL_JABATAN_OPTIONS.includes(item.jabatan) && (
                                         <input
                                             type="text"
-                                            list={`jabatan-dlf-list-${idx}`}
                                             value={item.jabatan || ''}
                                             onChange={(e) => updateApplicant(idx, 'jabatan', e.target.value)}
-                                            placeholder="Ketik atau edit nama jabatan..."
-                                            className="w-full px-2.5 py-1 bg-white border border-slate-200 rounded-lg text-xs text-slate-800"
+                                            placeholder="Ketik nama jabatan..."
+                                            className="w-full mt-1.5 px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg text-xs text-slate-800 focus:ring-2 focus:ring-amber-500/20"
+                                            autoFocus
                                         />
-                                        <datalist id={`jabatan-dlf-list-${idx}`}>
-                                            {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
-                                                <option key={jIdx} value={jbt} />
-                                            ))}
-                                        </datalist>
-                                    </div>
+                                    )}
                                 </div>
 
                                 <div>

@@ -3,8 +3,16 @@ import { Link } from '@inertiajs/react';
 import BadgeStatus from '@/Components/UI/BadgeStatus';
 import Icon from '@/Components/UI/Icon';
 
-export default function ApplicationTable({ applications = [], basePath = '/operator/applications' }) {
+export default function ApplicationTable({ applications = [], basePath = '/operator/applications', isLoading = false }) {
     if (!applications || applications.length === 0) {
+        if (isLoading) {
+            return (
+                <div className="text-center py-16 bg-surface-container-lowest border border-outline/10 rounded-DEFAULT flex flex-col items-center justify-center gap-3">
+                    <Icon name="progress_activity" className="text-3xl text-primary animate-spin" />
+                    <p className="font-label-sm text-xs text-on-surface-variant uppercase tracking-wider">Memuat permohonan surat...</p>
+                </div>
+            );
+        }
         return (
             <div className="text-center py-16 bg-surface-container-lowest border border-outline/10 rounded-DEFAULT">
                 <Icon name="drafts" className="text-4xl text-outline mb-2" />
@@ -15,8 +23,20 @@ export default function ApplicationTable({ applications = [], basePath = '/opera
     }
 
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse font-body-md">
+        <div className="relative overflow-hidden">
+            {isLoading && (
+                <div className="absolute inset-0 z-30 bg-surface/80 backdrop-blur-xs flex flex-col items-center justify-center gap-3 transition-all duration-200">
+                    <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-surface-container-lowest shadow-xl border border-outline/10 gap-3 animate-in fade-in zoom-in-95 duration-150">
+                        <div className="relative flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full border-[3.5px] border-primary/20 border-t-primary border-r-primary/80 animate-spin"></div>
+                            <div className="absolute w-3 h-3 rounded-full bg-primary animate-pulse"></div>
+                        </div>
+                        <span className="font-label-sm text-xs font-bold text-primary tracking-wide">Memuat data permohonan...</span>
+                    </div>
+                </div>
+            )}
+            <div className={`overflow-x-auto transition-opacity duration-200 ${isLoading ? 'opacity-40 select-none pointer-events-none' : 'opacity-100'}`}>
+                <table className="w-full text-left border-collapse font-body-md">
                 <thead>
                     <tr className="border-b border-outline/20 font-label-sm text-[10px] uppercase tracking-widest text-on-surface-variant">
                         <th className="py-4 px-4 font-semibold w-[20%]">Ref Number / Date</th>
@@ -97,6 +117,7 @@ export default function ApplicationTable({ applications = [], basePath = '/opera
                     })}
                 </tbody>
             </table>
+            </div>
         </div>
     );
 }

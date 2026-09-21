@@ -35,6 +35,7 @@ class SchoolProfileController extends Controller
             'headmaster_nip' => 'nullable|string|max:50',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
             'signature' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
+            'stamp' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:2048',
         ]);
 
         $data = $request->only([
@@ -64,8 +65,19 @@ class SchoolProfileController extends Controller
             $data['signature_path'] = '/storage/' . $path;
         }
 
+        if ($request->hasFile('stamp')) {
+            if ($school->stamp_path) {
+                $oldDiskPath = str_replace('/storage/', '', $school->stamp_path);
+                if (Storage::disk('public')->exists($oldDiskPath)) {
+                    Storage::disk('public')->delete($oldDiskPath);
+                }
+            }
+            $path = $request->file('stamp')->store('stamps', 'public');
+            $data['stamp_path'] = '/storage/' . $path;
+        }
+
         $school->update($data);
 
-        return redirect()->back()->with('success', 'Profil Sekolah, Logo Kop, dan Sampel Tanda Tangan Basah berhasil diperbarui.');
+        return redirect()->back()->with('success', 'Profil Sekolah, Logo Kop, Tanda Tangan, dan Cap Stempel berhasil diperbarui.');
     }
 }

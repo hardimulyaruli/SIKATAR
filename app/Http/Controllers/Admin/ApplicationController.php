@@ -32,6 +32,13 @@ class ApplicationController extends Controller
 
         $applications = $query->latest()->paginate(10)->withQueryString();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'applications' => $applications,
+                'filters' => $request->only(['search', 'status']),
+            ]);
+        }
+
         return Inertia::render('Admin/Applications/Index', [
             'applications' => $applications,
             'filters' => $request->only(['search', 'status']),

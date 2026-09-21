@@ -35,6 +35,13 @@ class DeletionRequestController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'requests' => $requests,
+                'filters' => $request->only(['search', 'status']),
+            ]);
+        }
+
         return Inertia::render('Admin/DeletionRequests/Index', [
             'requests' => $requests,
             'filters' => $request->only(['search', 'status']),

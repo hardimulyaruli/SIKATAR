@@ -2,10 +2,17 @@ import React, { useState } from 'react';
 import OperatorLayout from '@/Layouts/OperatorLayout';
 import Icon from '@/Components/UI/Icon';
 import LiveLetterPreview from '@/Components/Letter/LiveLetterPreview';
+import { getImageUrl } from '@/Components/Letter/HeaderKopSurat';
 import { useForm } from '@inertiajs/react';
 import { CLASSIFICATION_CODES } from '@/Utils/classificationCodes';
 import { sanitizeNip, findEmployeeByNip, getAllEmployeesList, lookupEmployeeApi } from '@/Utils/employeeLookup';
 import { SCHOOL_JABATAN_OPTIONS } from '@/Utils/schoolPositions';
+import SignatureSelectorSection from '@/Components/Signature/SignatureSelectorSection';
+import StampSelectorSection from '@/Components/Signature/StampSelectorSection';
+import SignatureExtractorModal from '@/Components/Signature/SignatureExtractorModal';
+import CameraCaptureModal from '@/Components/Signature/CameraCaptureModal';
+import { autoExtractSignature } from '@/Utils/signatureProcessor';
+import { generateSchoolStampDataUrl } from '@/Utils/stampGenerator';
 
 export default function ApplicationCreate({ school, templates = [], selectedTemplate: initialTpl, employees = [] }) {
     const safeTemplates = Array.isArray(templates) ? templates : [];
@@ -80,8 +87,134 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
         body_content: defaultTemplate?.default_body_template || '',
         form_data: {
             letter_date: todayIsoDate,
+            stamp_mode: 'none',
         },
+        custom_signature: null,
+        custom_stamp: null,
     });
+
+    // State untuk Tanda Tangan Basah (Default Profil vs Khusus Surat Ini)
+    const [signatureMode, setSignatureMode] = useState('default');
+    const [customSigPreview, setCustomSigPreview] = useState(null);
+    const [rawSigFile, setRawSigFile] = useState(null);
+    const [isExtractorOpen, setIsExtractorOpen] = useState(false);
+    const [isCameraOpen, setIsCameraOpen] = useState(false);
+    const [isExtracting, setIsExtracting] = useState(false);
+
+    // State untuk Cap / Stempel Sekolah (Tanpa Cap by Default vs Sampel Resmi vs Khusus Surat Ini)
+    const [stampMode, setStampMode] = useState('none'); // 'none' | 'sample' | 'custom'
+    const [customStampPreview, setCustomStampPreview] = useState(null);
+    const [isExtractingStamp, setIsExtractingStamp] = useState(false);
+    const [cameraTarget, setCameraTarget] = useState('signature'); // 'signature' | 'stamp'
+
+    const handleSignatureModeChange = (mode) => {
+        setSignatureMode(mode);
+        if (mode === 'default') {
+            setData('custom_signature', null);
+        }
+    };
+
+    const handleStampModeChange = (mode) => {
+        setStampMode(mode);
+        if (mode === 'none') {
+            setData((prev) => ({
+                ...prev,
+                custom_stamp: null,
+                form_data: {
+                    ...prev.form_data,
+                    stamp_mode: 'none',
+                },
+            }));
+        } else if (mode === 'sample') {
+            setData((prev) => ({
+                ...prev,
+                custom_stamp: null,
+                form_data: {
+                    ...prev.form_data,
+                    stamp_mode: 'sample',
+                },
+            }));
+        }
+    };
+
+    // Alur 100% Otomatis & Foolproof: Ekstrak secara langsung tanpa intervensi user
+    const handleProcessFileAutomatically = async (file) => {
+        if (!file) return;
+        setRawSigFile(file);
+        setIsExtracting(true);
+
+        try {
+            const result = await autoExtractSignature(file);
+            setData('custom_signature', result.file);
+            setCustomSigPreview(result.previewUrl);
+            setSignatureMode('custom');
+        } catch (err) {
+            console.error('Ekstraksi otomatis gagal, fallback ke studio manual:', err);
+            setIsExtractorOpen(true);
+        } finally {
+            setIsExtracting(false);
+        }
+    };
+
+    const handleRawFileSelected = (file) => {
+        handleProcessFileAutomatically(file);
+    };
+
+    const handleStampFileSelected = async (file) => {
+        if (!file) return;
+        setIsExtractingStamp(true);
+        try {
+            const result = await autoExtractSignature(file);
+            setData((prev) => ({
+                ...prev,
+                custom_stamp: result.file,
+                form_data: {
+                    ...prev.form_data,
+                    stamp_mode: 'custom',
+                },
+            }));
+            setCustomStampPreview(result.previewUrl);
+            setStampMode('custom');
+        } catch (err) {
+            console.error('Ekstraksi cap otomatis gagal:', err);
+        } finally {
+            setIsExtractingStamp(false);
+        }
+    };
+
+    const handleResetCustomStamp = () => {
+        setCustomStampPreview(null);
+        setStampMode('sample');
+        setData((prev) => ({
+            ...prev,
+            custom_stamp: null,
+            form_data: {
+                ...prev.form_data,
+                stamp_mode: 'sample',
+            },
+        }));
+    };
+
+    const handleCameraCapture = (file) => {
+        if (cameraTarget === 'stamp') {
+            handleStampFileSelected(file);
+        } else {
+            handleProcessFileAutomatically(file);
+        }
+    };
+
+    const handleSaveCleanSignature = (cleanFile, cleanPreviewUrl) => {
+        setData('custom_signature', cleanFile);
+        setCustomSigPreview(cleanPreviewUrl);
+        setSignatureMode('custom');
+    };
+
+    const handleResetCustomSignature = () => {
+        setData('custom_signature', null);
+        setCustomSigPreview(null);
+        setRawSigFile(null);
+        setSignatureMode('default');
+    };
 
     const handleSelectTemplate = (tpl) => {
         if (!tpl) return;
@@ -305,7 +438,9 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post('/operator/applications');
+        post('/operator/applications', {
+            forceFormData: true,
+        });
     };
 
     // Helper to sort custom fields so 'nip' is always first before 'nama_pegawai'
@@ -544,40 +679,36 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                                             </div>
                                             <div>
                                                 <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">4. Jabatan</label>
-                                                <div className="space-y-1">
-                                                    <select
-                                                        value={SCHOOL_JABATAN_OPTIONS.includes(appItem.jabatan) ? appItem.jabatan : (appItem.jabatan ? '__CUSTOM__' : '')}
-                                                        onChange={(e) => {
-                                                            if (e.target.value !== '__CUSTOM__' && e.target.value !== '') {
-                                                                updateApplicant(aIdx, 'jabatan', e.target.value);
-                                                            }
-                                                        }}
-                                                        className="w-full px-2 py-1.5 bg-surface-container-lowest border border-outline/20 rounded text-xs font-semibold text-primary"
-                                                    >
-                                                        <option value="">-- Pilih Jabatan Sekolah --</option>
-                                                        {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
-                                                            <option key={jIdx} value={jbt}>
-                                                                {jbt}
-                                                            </option>
-                                                        ))}
-                                                        {appItem.jabatan && !SCHOOL_JABATAN_OPTIONS.includes(appItem.jabatan) && (
-                                                            <option value="__CUSTOM__">{appItem.jabatan} (Kustom)</option>
-                                                        )}
-                                                    </select>
+                                                <select
+                                                    value={SCHOOL_JABATAN_OPTIONS.includes(appItem.jabatan) ? appItem.jabatan : (appItem.jabatan ? '__CUSTOM__' : '')}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value;
+                                                        if (val === '__CUSTOM__') {
+                                                            updateApplicant(aIdx, 'jabatan', '');
+                                                        } else {
+                                                            updateApplicant(aIdx, 'jabatan', val);
+                                                        }
+                                                    }}
+                                                    className="w-full px-2 py-1.5 bg-surface-container-lowest border border-outline/20 rounded text-xs font-semibold text-primary"
+                                                >
+                                                    <option value="">-- Pilih Jabatan Sekolah --</option>
+                                                    {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
+                                                        <option key={jIdx} value={jbt}>
+                                                            {jbt}
+                                                        </option>
+                                                    ))}
+                                                    <option value="__CUSTOM__">Lainnya (Ketik Manual)</option>
+                                                </select>
+                                                {appItem.jabatan !== '' && !SCHOOL_JABATAN_OPTIONS.includes(appItem.jabatan) && (
                                                     <input
                                                         type="text"
-                                                        list={`jabatan-list-${aIdx}`}
                                                         value={appItem.jabatan || ''}
                                                         onChange={(e) => updateApplicant(aIdx, 'jabatan', e.target.value)}
-                                                        placeholder="Ketik atau edit nama jabatan..."
-                                                        className="w-full px-2 py-1 bg-surface-container-lowest border border-outline/20 rounded text-[11px] text-primary font-medium"
+                                                        placeholder="Ketik nama jabatan..."
+                                                        className="w-full mt-1.5 px-2 py-1.5 bg-surface-container-lowest border border-amber-400/50 rounded text-xs text-primary font-medium focus:ring-2 focus:ring-amber-500/20"
+                                                        autoFocus
                                                     />
-                                                    <datalist id={`jabatan-list-${aIdx}`}>
-                                                        {SCHOOL_JABATAN_OPTIONS.map((jbt, jIdx) => (
-                                                            <option key={jIdx} value={jbt} />
-                                                        ))}
-                                                    </datalist>
-                                                </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <label className="block text-[10px] font-semibold text-on-surface-variant mb-0.5">5. Unit Kerja</label>
@@ -620,6 +751,37 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                             />
                         </div>
 
+                        {/* 1. Opsi Tanda Tangan Basah (Default vs Khusus Surat Ini) */}
+                        <SignatureSelectorSection
+                            school={school}
+                            signatureMode={signatureMode}
+                            onModeChange={handleSignatureModeChange}
+                            customPreview={customSigPreview}
+                            onFileSelected={handleRawFileSelected}
+                            onOpenCamera={() => {
+                                setCameraTarget('signature');
+                                setIsCameraOpen(true);
+                            }}
+                            onOpenStudio={() => rawSigFile && setIsExtractorOpen(true)}
+                            onResetCustom={handleResetCustomSignature}
+                            isExtracting={isExtracting}
+                        />
+
+                        {/* 2. Opsi Cap / Stempel Sekolah (Ditimpa di Atas TTD) */}
+                        <StampSelectorSection
+                            school={school}
+                            stampMode={stampMode}
+                            onModeChange={handleStampModeChange}
+                            customStampPreview={customStampPreview}
+                            onFileSelected={handleStampFileSelected}
+                            onOpenCamera={() => {
+                                setCameraTarget('stamp');
+                                setIsCameraOpen(true);
+                            }}
+                            onResetCustom={handleResetCustomStamp}
+                            isExtracting={isExtractingStamp}
+                        />
+
                         {/* Action Buttons */}
                         <div className="flex items-center gap-4 pt-4 border-t border-outline/10">
                             <button
@@ -648,10 +810,36 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                             formData={data.form_data}
                             classificationCode={classificationCode}
                             status="draft"
+                            customSignature={signatureMode === 'custom' ? customSigPreview : null}
+                            customStamp={
+                                stampMode === 'none'
+                                    ? 'none'
+                                    : stampMode === 'custom'
+                                    ? customStampPreview
+                                    : (school?.stamp_path ? getImageUrl(school.stamp_path) : generateSchoolStampDataUrl(school?.name || 'SD NEGERI 1 PADALARANG'))
+                            }
                         />
                     </div>
                 </section>
             </div>
+
+            {/* Modal Ambil Foto dari Kamera Langsung */}
+            <CameraCaptureModal
+                isOpen={isCameraOpen}
+                onClose={() => setIsCameraOpen(false)}
+                onCapture={handleCameraCapture}
+            />
+
+            {/* Modal Studio Pembersih Tanda Tangan */}
+            <SignatureExtractorModal
+                isOpen={isExtractorOpen}
+                onClose={() => setIsExtractorOpen(false)}
+                rawImageFile={rawSigFile}
+                onSave={handleSaveCleanSignature}
+                headmasterName={school?.headmaster_name}
+                headmasterNip={school?.headmaster_nip}
+                schoolTitle="Kepala Sekolah"
+            />
         </OperatorLayout>
     );
 }

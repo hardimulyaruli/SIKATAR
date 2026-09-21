@@ -38,6 +38,13 @@ class EmployeeController extends Controller
         // Pengurutan berbasis indeks ID dan pagination 15 data per halaman
         $employees = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'employees' => $employees,
+                'filters' => $request->only(['search']),
+            ]);
+        }
+
         return Inertia::render('Operator/Employees/Index', [
             'employees' => $employees,
             'filters' => $request->only(['search']),
@@ -196,6 +203,13 @@ class EmployeeController extends Controller
         }
 
         $employees = $query->orderBy('deleted_at', 'desc')->paginate(15)->withQueryString();
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'employees' => $employees,
+                'filters' => $request->only(['search']),
+            ]);
+        }
 
         return Inertia::render('Operator/Employees/Archived', [
             'employees' => $employees,

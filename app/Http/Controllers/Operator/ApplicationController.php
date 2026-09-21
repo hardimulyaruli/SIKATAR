@@ -34,6 +34,13 @@ class ApplicationController extends Controller
 
         $applications = $query->latest()->paginate(10)->withQueryString();
 
+        if ($request->wantsJson()) {
+            return response()->json([
+                'applications' => $applications,
+                'filters' => $request->only(['search', 'status']),
+            ]);
+        }
+
         return Inertia::render('Operator/Applications/Index', [
             'applications' => $applications,
             'filters' => $request->only(['search', 'status']),
@@ -86,9 +93,23 @@ class ApplicationController extends Controller
             'recipient' => 'required|string|max:255',
             'body_content' => 'required|string',
             'form_data' => 'nullable|array',
+            'custom_signature' => 'nullable|image|mimes:jpeg,png,jpg|max:3072',
+            'custom_stamp' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:3072',
         ]);
 
         $appNumber = 'APP-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -4));
+
+        $formData = $request->form_data ?? [];
+
+        if ($request->hasFile('custom_signature')) {
+            $path = $request->file('custom_signature')->store('signatures/applications', 'public');
+            $formData['custom_signature_path'] = '/storage/' . $path;
+        }
+
+        if ($request->hasFile('custom_stamp')) {
+            $path = $request->file('custom_stamp')->store('stamps/applications', 'public');
+            $formData['custom_stamp_path'] = '/storage/' . $path;
+        }
 
         $application = LetterApplication::create([
             'application_number' => $appNumber,
@@ -99,7 +120,7 @@ class ApplicationController extends Controller
             'subject' => $request->subject,
             'recipient' => $request->recipient,
             'body_content' => $request->body_content,
-            'form_data_json' => $request->form_data ?? [],
+            'form_data_json' => $formData,
             'status' => 'submitted',
         ]);
 
