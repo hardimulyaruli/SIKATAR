@@ -43,7 +43,7 @@ export default function DeletionRequestTable({ requests = [], onApprove, onRejec
                     <tr key={req.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3.5 px-4">
                             <div className="flex items-center gap-2 font-bold text-slate-900">
-                                <FiHome className="w-4 h-4 text-blue-600 shrink-0" />
+                                <FiHome className="w-4 h-4 text-zinc-900 shrink-0" />
                                 <span>{req.school?.name || 'Sekolah'}</span>
                             </div>
                             <div className="text-[11px] text-slate-500 mt-0.5">
@@ -56,14 +56,14 @@ export default function DeletionRequestTable({ requests = [], onApprove, onRejec
 
                         <td className="py-3.5 px-4">
                             <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                                <FiUser className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+                                <FiUser className="w-3.5 h-3.5 text-zinc-800 shrink-0" />
                                 <span>{req.employee?.name || 'Pegawai'}</span>
                             </div>
                             <div className="text-[10px] text-slate-500 font-mono mt-0.5">
                                 NIP: {req.employee?.nip || '-'}
                             </div>
                             <div className="mt-1">
-                                <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-700">
+                                <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-200">
                                     {req.employee?.status_pegawai || 'PNS'}
                                 </span>
                             </div>
@@ -75,7 +75,7 @@ export default function DeletionRequestTable({ requests = [], onApprove, onRejec
                                     href={getImageUrl(req.document_path)}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white transition-colors text-xs font-medium border border-blue-200/60"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/70 hover:bg-zinc-900 text-zinc-900 hover:text-white backdrop-blur-xl border border-zinc-300 font-bold transition-all text-xs shadow-2xs active:scale-95 cursor-pointer"
                                 >
                                     <FiFileText className="w-3.5 h-3.5" />
                                     <span className="line-clamp-1 max-w-[120px]">
@@ -96,14 +96,14 @@ export default function DeletionRequestTable({ requests = [], onApprove, onRejec
 
                         <td className="py-3.5 px-4">
                             {req.status === 'pending' && (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-zinc-100 text-zinc-800 border border-zinc-300">
                                     <FiClock className="w-3.5 h-3.5" />
                                     <span>Menunggu</span>
                                 </span>
                             )}
                             {req.status === 'approved' && (
                                 <div>
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-zinc-900 text-white border border-zinc-900">
                                         <FiCheckCircle className="w-3.5 h-3.5" />
                                         <span>Diarsipkan</span>
                                     </span>
@@ -116,12 +116,12 @@ export default function DeletionRequestTable({ requests = [], onApprove, onRejec
                             )}
                             {req.status === 'rejected' && (
                                 <div>
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-zinc-200 text-zinc-950 border border-zinc-400">
                                         <FiXCircle className="w-3.5 h-3.5" />
                                         <span>Ditolak</span>
                                     </span>
                                     {req.admin_notes && (
-                                        <p className="text-[10px] text-rose-600 mt-1 line-clamp-2 italic" title={req.admin_notes}>
+                                        <p className="text-[10px] text-zinc-600 mt-1 line-clamp-2 italic" title={req.admin_notes}>
                                             Alasan: {req.admin_notes}
                                         </p>
                                     )}
@@ -134,7 +134,7 @@ export default function DeletionRequestTable({ requests = [], onApprove, onRejec
                                 <div className="flex items-center justify-end gap-2">
                                     <button
                                         onClick={() => onApprove(req)}
-                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition-colors text-xs shadow-xs cursor-pointer"
+                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-zinc-900/90 hover:bg-black text-white font-bold backdrop-blur-xl border border-zinc-800 shadow-sm active:scale-95 transition-all text-xs cursor-pointer"
                                         title="Setujui & Arsipkan Pegawai"
                                     >
                                         <FiCheck className="w-3.5 h-3.5" />
@@ -142,7 +142,7 @@ export default function DeletionRequestTable({ requests = [], onApprove, onRejec
                                     </button>
                                     <button
                                         onClick={() => onReject(req)}
-                                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white font-semibold transition-colors text-xs border border-rose-200 cursor-pointer"
+                                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/70 hover:bg-zinc-100 text-zinc-900 font-bold backdrop-blur-xl border border-zinc-300 shadow-2xs active:scale-95 transition-all text-xs cursor-pointer"
                                         title="Tolak Pengajuan"
                                     >
                                         <FiX className="w-3.5 h-3.5" />

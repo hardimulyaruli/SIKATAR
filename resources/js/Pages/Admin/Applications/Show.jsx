@@ -23,19 +23,19 @@ export default function AdminApplicationShow({ application }) {
     return (
         <AdminLayout>
             {/* Header */}
-            <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-outline/10 pb-8">
+            <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-zinc-200/80 pb-6">
                 <div>
-                    <p className="font-label-sm text-xs text-on-surface-variant uppercase tracking-widest mb-2">
+                    <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-1">
                         Pemeriksaan Application #{application.application_number}
                     </p>
-                    <h1 className="font-headline-md text-3xl md:text-5xl text-primary font-normal">
+                    <h1 className="text-3xl md:text-4xl text-zinc-950 font-bold tracking-tight">
                         Verifikasi Surat Masuk
                     </h1>
                 </div>
                 <div className="flex items-center gap-3">
                     <Link
                         href="/admin/applications"
-                        className="px-4 py-2.5 bg-surface-container-high text-primary font-label-sm text-xs uppercase tracking-widest font-semibold rounded-DEFAULT hover:bg-surface-container-highest transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-white/70 hover:bg-zinc-900 text-zinc-900 hover:text-white text-xs font-bold rounded-xl border border-zinc-300/80 backdrop-blur-xl shadow-2xs transition-all active:scale-95 flex items-center gap-2 cursor-pointer"
                     >
                         <Icon name="arrow_back" className="text-sm" />
                         <span>Kembali</span>
@@ -53,7 +53,7 @@ export default function AdminApplicationShow({ application }) {
                 </div>
 
                 {/* Right Column: High Fidelity Paper Preview (7 Cols) */}
-                <div className="lg:col-span-7 bg-surface-container-highest p-4 md:p-6 rounded-DEFAULT border border-outline/10 relative overflow-x-auto flex flex-col items-center justify-start min-h-[600px]">
+                <div className="lg:col-span-7 bg-zinc-100/60 p-4 md:p-6 rounded-2xl border border-zinc-200/90 relative overflow-x-auto flex flex-col items-center justify-start min-h-[600px]">
                     <div className="w-full overflow-x-auto flex justify-start lg:justify-center py-2">
                         <LiveLetterPreview
                             school={application.school}

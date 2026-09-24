@@ -39,7 +39,7 @@ export default function EmployeeEdit({ employee, editAuthorization = null }) {
                 subtitle="Perbarui data profil dan pasfoto kepegawaian."
             />
 
-            <div className="max-w-3xl">
+            <div className="w-full max-w-2xl mx-auto px-4 sm:px-0">
                 {!isAuthorized ? (
                     <EditAuthorizationGate
                         employee={employee}

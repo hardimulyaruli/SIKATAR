@@ -33,6 +33,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user() ? $request->user()->load('school') : null,
+                'session_id' => $request->session()->getId(),
                 'notifications' => fn () => $request->user()
                     ? $request->user()->notifications()->latest()->take(15)->get()->map(function ($n) {
                         return [

@@ -6,7 +6,7 @@ import { FiUsers, FiEye, FiEdit2, FiTrash2 } from 'react-icons/fi';
  * AdminEmployeeTable renders the employee listing rows and action triggers.
  * Single Responsibility: Tabular presentation of employee profiles and dispatching actions.
  */
-export default function AdminEmployeeTable({ employees = [], onDelete }) {
+export default function AdminEmployeeTable({ employees = [], onDelete, canModify = true }) {
     if (employees.length === 0) {
         return (
             <div className="py-12 text-center text-slate-500 text-xs">
@@ -31,7 +31,7 @@ export default function AdminEmployeeTable({ employees = [], onDelete }) {
                     <tr key={emp.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3.5 px-4">
                             <div className="font-bold text-slate-900 flex items-center gap-2">
-                                <FiUsers className="w-4 h-4 text-indigo-500 shrink-0" />
+                                <FiUsers className="w-4 h-4 text-zinc-800 shrink-0" />
                                 <span>{emp.name}</span>
                             </div>
                             <div className="text-[10px] text-slate-500 font-mono mt-0.5">
@@ -41,10 +41,10 @@ export default function AdminEmployeeTable({ employees = [], onDelete }) {
 
                         <td className="py-3.5 px-4">
                             <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                emp.status_pegawai === 'PNS' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                                emp.status_pegawai === 'CPNS' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                                emp.status_pegawai === 'PPPK' ? 'bg-purple-50 text-purple-700 border-purple-200' :
-                                'bg-slate-100 text-slate-700 border-slate-200'
+                                emp.status_pegawai === 'PNS' ? 'bg-zinc-900 text-white border-zinc-900 shadow-2xs' :
+                                emp.status_pegawai === 'CPNS' ? 'bg-zinc-700 text-white border-zinc-700 shadow-2xs' :
+                                emp.status_pegawai === 'PPPK' ? 'bg-zinc-200 text-zinc-900 border-zinc-300 shadow-2xs' :
+                                'bg-zinc-100 text-zinc-700 border-zinc-200'
                             }`}>
                                 {emp.status_pegawai}
                             </span>
@@ -64,25 +64,29 @@ export default function AdminEmployeeTable({ employees = [], onDelete }) {
                             <div className="flex items-center justify-end gap-1.5">
                                 <Link
                                     href={`/admin/employees/${emp.id}`}
-                                    className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                    className="p-2 text-zinc-900 hover:text-white bg-white/70 hover:bg-zinc-900 backdrop-blur-xl border border-zinc-200/90 hover:border-zinc-900 rounded-xl shadow-2xs active:scale-95 transition-all cursor-pointer"
                                     title="Detail Pegawai"
                                 >
                                     <FiEye className="w-4 h-4" />
                                 </Link>
-                                <Link
-                                    href={`/admin/employees/${emp.id}/edit`}
-                                    className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                                    title="Edit Pegawai"
-                                >
-                                    <FiEdit2 className="w-4 h-4" />
-                                </Link>
-                                <button
-                                    onClick={() => onDelete(emp.id)}
-                                    className="p-2 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                                    title="Hapus Pegawai"
-                                >
-                                    <FiTrash2 className="w-4 h-4" />
-                                </button>
+                                {canModify && (
+                                    <>
+                                        <Link
+                                            href={`/admin/employees/${emp.id}/edit`}
+                                            className="p-2 text-zinc-900 hover:text-white bg-white/70 hover:bg-zinc-900 backdrop-blur-xl border border-zinc-200/90 hover:border-zinc-900 rounded-xl shadow-2xs active:scale-95 transition-all cursor-pointer"
+                                            title="Edit Pegawai"
+                                        >
+                                            <FiEdit2 className="w-4 h-4" />
+                                        </Link>
+                                        <button
+                                            onClick={() => onDelete(emp.id)}
+                                            className="p-2 text-zinc-900 hover:text-white bg-white/70 hover:bg-zinc-900 backdrop-blur-xl border border-zinc-200/90 hover:border-zinc-900 rounded-xl shadow-2xs active:scale-95 transition-all cursor-pointer"
+                                            title="Hapus Pegawai"
+                                        >
+                                            <FiTrash2 className="w-4 h-4" />
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </td>
                     </tr>

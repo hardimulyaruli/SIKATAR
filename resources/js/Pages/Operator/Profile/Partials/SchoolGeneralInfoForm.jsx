@@ -50,8 +50,6 @@ export default function SchoolGeneralInfoForm({ data, setData, errors = {} }) {
                     >
                         <option value="SD">SD (Sekolah Dasar)</option>
                         <option value="SMP">SMP (Sekolah Menengah Pertama)</option>
-                        <option value="SMA">SMA</option>
-                        <option value="SMK">SMK</option>
                     </select>
                 </div>
 

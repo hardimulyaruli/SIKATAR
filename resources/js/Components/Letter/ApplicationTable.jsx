@@ -86,10 +86,10 @@ export default function ApplicationTable({ applications = [], basePath = '/opera
 
                                     {/* Applicant Details Summary if available */}
                                     {firstApp?.nama && (
-                                        <div className="mt-1.5 text-[11px] text-blue-900 bg-blue-50/80 px-2 py-1 rounded border border-blue-100 leading-tight inline-block">
+                                        <div className="mt-1.5 text-[11px] text-zinc-900 bg-zinc-100/90 px-2.5 py-1 rounded-lg border border-zinc-200 leading-tight inline-block shadow-2xs">
                                             <span className="font-bold">Pemohon:</span> {firstApp.nama}
-                                            {firstApp.nip ? <span className="font-mono text-[10px] text-slate-600 ml-1">({firstApp.nip})</span> : ''}
-                                            {appCount > 1 ? <span className="font-bold text-blue-700 ml-1">cs {appCount} Orang</span> : ''}
+                                            {firstApp.nip ? <span className="font-mono text-[10px] text-zinc-600 ml-1">({firstApp.nip})</span> : ''}
+                                            {appCount > 1 ? <span className="font-bold text-zinc-950 ml-1">cs {appCount} Orang</span> : ''}
                                         </div>
                                     )}
                                 </td>
@@ -97,7 +97,7 @@ export default function ApplicationTable({ applications = [], basePath = '/opera
                                 <td className="py-4 px-4 align-top">
                                     <BadgeStatus status={app.status} />
                                     {app.admin_notes && (
-                                        <p className="text-[11px] text-error font-medium italic mt-1.5 leading-tight whitespace-normal break-words">
+                                        <p className="text-[11px] text-zinc-600 font-medium italic mt-1.5 leading-tight whitespace-normal break-words">
                                             Note: "{app.admin_notes}"
                                         </p>
                                     )}
@@ -106,7 +106,7 @@ export default function ApplicationTable({ applications = [], basePath = '/opera
                                 <td className="py-4 px-4 text-right align-top">
                                     <Link
                                         href={`${basePath}/${app.id}`}
-                                        className="inline-flex items-center gap-1 font-label-sm text-xs text-primary uppercase tracking-widest hover:underline underline-offset-4 font-semibold"
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/70 hover:bg-zinc-900 text-zinc-900 hover:text-white font-bold text-xs uppercase tracking-wider rounded-xl backdrop-blur-xl border border-zinc-300/80 shadow-2xs active:scale-95 transition-all cursor-pointer"
                                     >
                                         <span>Review</span>
                                         <Icon name="arrow_forward" className="text-xs" />

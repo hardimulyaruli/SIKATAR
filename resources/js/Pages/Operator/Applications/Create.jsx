@@ -183,14 +183,13 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                         />
 
                         {/* Submit Button */}
-                        <div className="flex items-center gap-4 pt-4 border-t border-outline/10">
+                        <div className="flex items-center gap-4 pt-4 border-t border-zinc-200/60">
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="flex-1 bg-primary text-on-primary py-3 rounded-lg font-label-sm text-xs uppercase tracking-widest hover:bg-on-surface transition-colors flex justify-center items-center gap-2 font-semibold shadow-xs disabled:opacity-50 cursor-pointer"
+                                className="w-full flex-1 inline-flex items-center justify-center py-3.5 px-6 bg-white/70 backdrop-blur-xl text-zinc-900 border border-zinc-200/90 rounded-2xl text-xs uppercase tracking-widest font-bold shadow-xs hover:bg-white/95 hover:border-zinc-300 transition-all disabled:opacity-50 cursor-pointer"
                             >
                                 <span>Kirim Pengajuan Surat</span>
-                                <Icon name="send" className="text-sm text-on-primary" />
                             </button>
                         </div>
                     </form>
@@ -230,6 +229,7 @@ export default function ApplicationCreate({ school, templates = [], selectedTemp
                 isOpen={signatures.isCameraOpen}
                 onClose={() => signatures.setIsCameraOpen(false)}
                 onCapture={signatures.handleCameraCapture}
+                title={signatures.cameraTarget === 'stamp' ? 'Foto Cap / Stempel Sekolah' : 'Foto Tanda Tangan Basah'}
             />
 
             {/* Signature Transparent Processing Studio Modal */}

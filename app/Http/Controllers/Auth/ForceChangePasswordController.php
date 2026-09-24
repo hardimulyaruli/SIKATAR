@@ -43,7 +43,7 @@ class ForceChangePasswordController extends Controller
         ]);
 
         $role = $user->role;
-        return redirect($role === 'admin' ? '/admin/dashboard' : '/operator/dashboard')
+        return redirect(in_array($role, ['staff_kepala', 'staff_biasa', 'admin']) ? '/admin/dashboard' : '/operator/dashboard')
             ->with('success', 'Password berhasil diubah! Selamat datang di SIKATAR.');
     }
 }

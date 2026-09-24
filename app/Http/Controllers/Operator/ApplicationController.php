@@ -124,8 +124,8 @@ class ApplicationController extends Controller
             'status' => 'submitted',
         ]);
 
-        // Notify Admin Users
-        $admins = User::where('role', 'admin')->get();
+        // Notify Staff Users (Staff Kepala & Staff Biasa)
+        $admins = User::whereIn('role', ['staff_kepala', 'staff_biasa', 'admin'])->get();
         foreach ($admins as $admin) {
             $admin->notify(new ApplicationNotification([
                 'title' => 'Pengajuan Surat Baru',
@@ -170,8 +170,8 @@ class ApplicationController extends Controller
             'admin_notes' => null,
         ]);
 
-        // Notify Admin Users
-        $admins = User::where('role', 'admin')->get();
+        // Notify Staff Users (Staff Kepala & Staff Biasa)
+        $admins = User::whereIn('role', ['staff_kepala', 'staff_biasa', 'admin'])->get();
         foreach ($admins as $admin) {
             $admin->notify(new ApplicationNotification([
                 'title' => 'Perbaikan Pengajuan Terkirim',
@@ -187,7 +187,7 @@ class ApplicationController extends Controller
     private function authorizeSchoolOwner(LetterApplication $application)
     {
         $user = Auth::user();
-        if ($user->role !== 'admin' && $application->school_id !== $user->school_id) {
+        if (!in_array($user->role, ['staff_kepala', 'staff_biasa', 'admin']) && $application->school_id !== $user->school_id) {
             abort(403, 'Akses ditolak.');
         }
     }

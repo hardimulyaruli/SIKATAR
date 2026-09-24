@@ -16,13 +16,27 @@ class DatabaseSeeder extends Seeder
         // 1. Seed Real Schools & Employees & Operator Users from Excel (896 Sekolah & 12.323 Pegawai)
         $this->call(DataPegawaiSeeder::class);
 
-        // 2. Seed Admin User
+        // 2. Seed Staff Dinas (Staff Kepala & Staff Biasa)
         $admin = User::firstOrCreate(
             ['email' => 'admin@disdik.kbb.go.id'],
             [
-                'name' => 'Admin Disdik KBB',
+                'name' => 'Kepala Staf Disdik KBB',
                 'password' => Hash::make('password'),
-                'role' => 'admin',
+                'role' => 'staff_kepala',
+                'school_id' => null,
+            ]
+        );
+        // Pastikan role tersinkronkan ke staff_kepala jika sudah pernah ada sebelumnya
+        if ($admin->role === 'admin') {
+            $admin->update(['role' => 'staff_kepala', 'name' => 'Kepala Staf Disdik KBB']);
+        }
+
+        $staffBiasa = User::firstOrCreate(
+            ['email' => 'staff@disdik.kbb.go.id'],
+            [
+                'name' => 'Staf Verifikator Disdik',
+                'password' => Hash::make('password'),
+                'role' => 'staff_biasa',
                 'school_id' => null,
             ]
         );

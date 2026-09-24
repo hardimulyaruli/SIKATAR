@@ -32,7 +32,7 @@ export default function SchoolTable({ schools = [] }) {
                     <tr key={sc.id} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3.5 px-4">
                             <div className="font-bold text-slate-900 flex items-center gap-2">
-                                <FiHome className="w-4 h-4 text-blue-600 shrink-0" />
+                                <FiHome className="w-4 h-4 text-zinc-900 shrink-0" />
                                 <span>{sc.name}</span>
                             </div>
                             <div className="text-[10px] text-slate-500 font-mono mt-0.5">
@@ -41,7 +41,7 @@ export default function SchoolTable({ schools = [] }) {
                         </td>
 
                         <td className="py-3.5 px-4">
-                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-100 text-zinc-900 border border-zinc-200/90 shadow-2xs">
                                 {sc.jenjang} • Akreditasi {sc.status_akreditasi}
                             </span>
                         </td>
@@ -53,22 +53,22 @@ export default function SchoolTable({ schools = [] }) {
 
                         <td className="py-3.5 px-4 max-w-xs">
                             <div className="text-slate-600 line-clamp-1">{sc.address || '-'}</div>
-                            <div className="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                            <div className="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5 flex-wrap">
                                 {sc.phone && (
-                                    <span className="flex items-center gap-0.5">
-                                        <FiPhone className="w-3 h-3" /> {sc.phone}
+                                    <span className="flex items-center gap-0.5" title="Telepon Sekolah">
+                                        <FiPhone className="w-3 h-3 shrink-0" /> {sc.phone}
                                     </span>
                                 )}
                                 {sc.email && (
-                                    <span className="flex items-center gap-0.5">
-                                        <FiMail className="w-3 h-3" /> {sc.email}
+                                    <span className="flex items-center gap-0.5" title="Email Resmi Sekolah">
+                                        <FiMail className="w-3 h-3 shrink-0" /> {sc.email.replace(/^operator\./i, '')}
                                     </span>
                                 )}
                             </div>
                         </td>
 
                         <td className="py-3.5 px-4 text-center space-y-1">
-                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-900 text-white border border-zinc-900 shadow-2xs">
                                 {sc.users_count || 0} Akun Operator
                             </span>
                             <div className="text-[10px] text-slate-500 font-semibold">
@@ -79,7 +79,7 @@ export default function SchoolTable({ schools = [] }) {
                         <td className="py-3.5 px-4 text-right">
                             <Link
                                 href={`/admin/schools/${sc.id}`}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-zinc-900 bg-white/70 hover:bg-zinc-900 hover:text-white backdrop-blur-xl border border-zinc-300/80 shadow-2xs active:scale-95 transition-all cursor-pointer"
                             >
                                 <FiEye className="w-3.5 h-3.5" />
                                 <span>Detail Profil</span>

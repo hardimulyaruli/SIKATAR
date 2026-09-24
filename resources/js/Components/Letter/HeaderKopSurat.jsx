@@ -1,4 +1,5 @@
 import React from 'react';
+import { usePage } from '@inertiajs/react';
 
 export function LogoPemkabKBB({ className = "w-20 h-24" }) {
     return (
@@ -75,26 +76,52 @@ export function QRCodeTTE({ className = "w-10 h-10" }) {
 
 export const getImageUrl = (path) => {
     if (!path) return null;
-    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:')) return path;
+    if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('data:') || path.startsWith('blob:')) return path;
     const cleanPath = path.startsWith('/storage/') ? path.replace('/storage/', '') : (path.startsWith('storage/') ? path.replace('storage/', '') : path);
     return `/storage/${cleanPath}`;
 };
 
-export default function HeaderKopSurat({ school, isDisdik = false }) {
+export default function HeaderKopSurat({ school, isDisdik = false, disdikLogo = null }) {
     const [imgError, setImgError] = React.useState(false);
+    const [disdikImgError, setDisdikImgError] = React.useState(false);
+
+    let authUser = null;
+    try {
+        const page = usePage();
+        authUser = page?.props?.auth?.user;
+    } catch (e) {
+        // Fallback when rendered outside Inertia context
+    }
+
+    const effectiveDisdikLogo = disdikLogo !== undefined && disdikLogo !== null
+        ? disdikLogo
+        : (authUser && ['staff_kepala', 'staff_biasa', 'admin'].includes(authUser?.role) ? authUser?.profile_photo_path : null);
 
     // Reset imgError if school logo path changes
     React.useEffect(() => {
         setImgError(false);
     }, [school?.logo_kop_path]);
 
+    React.useEffect(() => {
+        setDisdikImgError(false);
+    }, [effectiveDisdikLogo]);
+
     if (isDisdik || !school) {
         return (
             <div className="kop-surat-header border-b-4 border-double border-black pb-2 mb-6 font-sans text-center relative">
                 <div className="flex items-center justify-between gap-4">
-                    {/* Left Logo - Pemkab Bandung Barat */}
+                    {/* Left Logo - Pemkab Bandung Barat or Disdik Custom Uploaded Logo */}
                     <div className="w-20 h-24 flex items-center justify-center shrink-0">
-                        <LogoPemkabKBB className="w-18 h-22" />
+                        {effectiveDisdikLogo && !disdikImgError ? (
+                            <img
+                                src={getImageUrl(effectiveDisdikLogo)}
+                                alt="Logo Dinas Pendidikan"
+                                className="w-18 h-22 object-contain"
+                                onError={() => setDisdikImgError(true)}
+                            />
+                        ) : (
+                            <LogoPemkabKBB className="w-18 h-22" />
+                        )}
                     </div>
 
                     {/* Center Kop Text */}
@@ -150,7 +177,7 @@ export default function HeaderKopSurat({ school, isDisdik = false }) {
                     <p className="text-[10px] md:text-[11px] font-sans text-slate-800 mt-1 leading-snug">
                         {school?.address || 'Jl. Raya Padalarang No. 120, Padalarang, Bandung Barat'}
                         {school?.phone && ` • Telp: ${school.phone}`}
-                        {school?.email && ` • Email: ${school.email}`}
+                        {school?.email && ` • Email: ${school.email.replace(/^operator\./i, '')}`}
                     </p>
                 </div>
 

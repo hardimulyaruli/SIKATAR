@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { FiX, FiCheck, FiArrowLeft, FiSliders, FiMaximize2 } from 'react-icons/fi';
 import { loadImage, processSignatureImage, canvasToFile } from '@/Utils/signatureProcessor';
 import SignatureCropView from './SignatureCropView';
@@ -101,11 +102,11 @@ export default function SignatureExtractorModal({
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-200">
+    const modalMarkup = (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+            <div className="bg-white/95 backdrop-blur-2xl rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-zinc-200 animate-in fade-in zoom-in duration-200">
                 {/* Modal Header */}
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80">
                     <div className="flex items-center gap-2">
                         {step === 'studio' && (
                             <button
@@ -213,7 +214,7 @@ export default function SignatureExtractorModal({
                                 type="button"
                                 onClick={handleConfirm}
                                 disabled={!finalCanvas || isProcessing}
-                                className="inline-flex items-center gap-1.5 px-5 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-xs"
+                                className="inline-flex items-center gap-1.5 px-5 py-2 bg-zinc-900/90 hover:bg-black text-white text-xs font-bold rounded-xl border border-zinc-800 backdrop-blur-xl shadow-sm disabled:opacity-50 transition-all active:scale-95 cursor-pointer"
                             >
                                 <FiCheck size={14} />
                                 <span>Gunakan Tanda Tangan Ini</span>
@@ -224,4 +225,6 @@ export default function SignatureExtractorModal({
             </div>
         </div>
     );
+
+    return typeof document !== 'undefined' ? createPortal(modalMarkup, document.body) : modalMarkup;
 }

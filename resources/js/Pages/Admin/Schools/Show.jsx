@@ -17,7 +17,7 @@ export default function SchoolsShow({ school }) {
                 action={
                     <Link
                         href="/admin/schools"
-                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5"
+                        className="px-4 py-2.5 bg-white/70 hover:bg-white text-zinc-900 text-xs font-bold rounded-xl backdrop-blur-xl border border-zinc-200/90 shadow-2xs active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
                     >
                         <FiArrowLeft className="w-4 h-4" />
                         <span>Kembali ke Daftar</span>
@@ -35,7 +35,7 @@ export default function SchoolsShow({ school }) {
             <GlassCard
                 header={
                     <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                        <FiFileText className="w-4 h-4 text-blue-600" />
+                        <FiFileText className="w-4 h-4 text-zinc-900" />
                         Riwayat Permohonan Surat Masuk ({school.letter_applications?.length || 0})
                     </h3>
                 }

@@ -45,7 +45,7 @@ class SchoolController extends Controller
         $request->validate([
             'npsn' => 'required|string|max:20|unique:schools,npsn',
             'name' => 'required|string|max:255',
-            'jenjang' => 'required|string|in:SD,SMP,SMA,SMK',
+            'jenjang' => 'required|string|in:SD,SMP',
             'status_akreditasi' => 'nullable|string|max:10',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:50',

@@ -10,83 +10,74 @@ import BadgeStatus from '@/Components/UI/BadgeStatus';
  */
 export default function AdminDecisionPanel({ application, onAction }) {
     return (
-        <div className="bg-surface-container-lowest border border-outline/10 p-6 md:p-8 rounded-DEFAULT space-y-6 shadow-xs">
-            <h3 className="font-headline-md text-primary text-2xl border-b border-outline/10 pb-3">
+        <div className="bg-white/80 backdrop-blur-xl border border-zinc-200/90 p-6 md:p-8 rounded-2xl space-y-6 shadow-sm">
+            <h3 className="font-bold text-zinc-950 text-xl border-b border-zinc-200/80 pb-3">
                 Panel Keputusan Admin
             </h3>
 
-            <div className="space-y-4 font-body-md text-xs">
-                <div className="flex items-center justify-between border-b border-outline/10 pb-3">
-                    <span className="font-label-sm text-[10px] uppercase tracking-widest text-on-surface-variant">
+            <div className="space-y-4 text-xs">
+                <div className="flex items-center justify-between border-b border-zinc-200/80 pb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                         Status Verification:
                     </span>
                     <BadgeStatus status={application.status} />
                 </div>
 
-                <div className="border-b border-outline/10 pb-3">
-                    <span className="font-label-sm text-[10px] uppercase tracking-widest text-on-surface-variant block mb-1">
+                <div className="border-b border-zinc-200/80 pb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block mb-1">
                         Sekolah Pemohon:
                     </span>
-                    <span className="font-headline-md text-primary text-xl font-normal block">
+                    <span className="font-bold text-zinc-950 text-lg block">
                         {application.school?.name}
                     </span>
-                    <span className="text-on-surface-variant text-[11px]">
+                    <span className="text-zinc-500 text-[11px] font-medium">
                         NPSN: {application.school?.npsn} • Kepsek: {application.school?.headmaster_name || '-'}
                     </span>
                 </div>
 
-                <div className="border-b border-outline/10 pb-3">
-                    <span className="font-label-sm text-[10px] uppercase tracking-widest text-on-surface-variant block mb-1">
+                <div className="border-b border-zinc-200/80 pb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 block mb-1">
                         Perihal Directive:
                     </span>
-                    <span className="font-semibold text-primary">{application.subject}</span>
+                    <span className="font-bold text-zinc-900">{application.subject}</span>
                 </div>
 
                 {application.admin_notes && (
-                    <div className="p-4 bg-secondary-container/40 rounded-sm border border-outline/10 text-primary">
-                        <span className="font-label-sm text-[10px] uppercase tracking-widest text-on-surface-variant font-bold block mb-1">
+                    <div className="p-4 bg-zinc-100/80 rounded-xl border border-zinc-200/90 text-zinc-900">
+                        <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold block mb-1">
                             Catatan Disdik:
                         </span>
-                        <p className="italic">"{application.admin_notes}"</p>
+                        <p className="italic text-zinc-800">"{application.admin_notes}"</p>
                     </div>
                 )}
 
                 {application.official_letter_number && (
-                    <div className="p-4 bg-surface-container-high rounded-sm border border-outline/10 text-primary">
-                        <span className="font-label-sm text-[10px] uppercase tracking-widest text-primary font-bold block mb-1">
+                    <div className="p-4 bg-zinc-100/90 rounded-xl border border-zinc-200/90 text-zinc-900">
+                        <span className="text-[10px] uppercase tracking-widest text-zinc-600 font-bold block mb-1">
                             Nomor Surat Resmi Terbit:
                         </span>
-                        <p className="font-mono font-bold text-sm">
+                        <p className="font-mono font-bold text-sm text-zinc-950">
                             {application.official_letter_number}
                         </p>
                     </div>
                 )}
 
                 {/* Action Buttons */}
-                <div className="pt-6 border-t border-outline/10 space-y-3 font-label-sm text-xs uppercase tracking-widest">
-                    <button
-                        onClick={() => onAction('approved')}
-                        className="w-full py-3 px-4 bg-primary text-on-primary font-semibold rounded-DEFAULT hover:bg-on-surface transition-colors flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                    >
-                        <Icon name="check_circle" className="text-on-primary text-sm" />
-                        <span>Setujui & Terbitkan No. Surat</span>
-                    </button>
-
-                    <button
-                        onClick={() => onAction('revision_requested')}
-                        className="w-full py-3 px-4 bg-secondary-container text-on-secondary-container font-semibold rounded-DEFAULT hover:bg-secondary-fixed-dim transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                        <Icon name="edit" className="text-sm" />
-                        <span>Beri Catatan Revisi</span>
-                    </button>
-
-                    <button
-                        onClick={() => onAction('rejected')}
-                        className="w-full py-2.5 px-4 bg-error-container text-on-error-container font-semibold rounded-DEFAULT hover:bg-error/10 transition-colors flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                        <Icon name="cancel" className="text-sm" />
-                        <span>Tolak Application</span>
-                    </button>
+                <div className="pt-6 border-t border-zinc-200/80 text-xs tracking-wider">
+                    {application.status === 'approved' ? (
+                        <div className="w-full py-3.5 px-4 bg-zinc-100/90 text-zinc-900 font-bold rounded-xl border border-zinc-300/80 backdrop-blur-xl shadow-2xs flex items-center justify-center gap-2 select-none">
+                            <Icon name="verified" className="text-zinc-950 text-base" />
+                            <span>Surat Telah Diterima & Disetujui</span>
+                        </div>
+                    ) : (
+                        <button
+                            onClick={() => onAction('approved')}
+                            className="w-full py-3.5 px-4 bg-zinc-900/90 hover:bg-black text-white font-bold rounded-xl border border-zinc-800 backdrop-blur-xl shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <Icon name="check_circle" className="text-white text-base" />
+                            <span>Terima & Terbitkan No. Surat</span>
+                        </button>
+                    )}
                 </div>
             </div>
         </div>

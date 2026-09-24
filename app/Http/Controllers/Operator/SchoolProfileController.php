@@ -26,7 +26,7 @@ class SchoolProfileController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'npsn' => 'required|string|max:50|unique:schools,npsn,' . $school->id,
-            'jenjang' => 'required|string|in:SD,SMP,SMA,SMK',
+            'jenjang' => 'required|string|in:SD,SMP',
             'status_akreditasi' => 'required|string|max:10',
             'address' => 'nullable|string|max:500',
             'phone' => 'nullable|string|max:50',
@@ -54,7 +54,15 @@ class SchoolProfileController extends Controller
             $data['logo_kop_path'] = '/storage/' . $path;
         }
 
-        if ($request->hasFile('signature')) {
+        if ($request->boolean('delete_signature')) {
+            if ($school->signature_path) {
+                $oldDiskPath = str_replace('/storage/', '', $school->signature_path);
+                if (Storage::disk('public')->exists($oldDiskPath)) {
+                    Storage::disk('public')->delete($oldDiskPath);
+                }
+            }
+            $data['signature_path'] = null;
+        } elseif ($request->hasFile('signature')) {
             if ($school->signature_path) {
                 $oldDiskPath = str_replace('/storage/', '', $school->signature_path);
                 if (Storage::disk('public')->exists($oldDiskPath)) {
@@ -65,7 +73,15 @@ class SchoolProfileController extends Controller
             $data['signature_path'] = '/storage/' . $path;
         }
 
-        if ($request->hasFile('stamp')) {
+        if ($request->boolean('delete_stamp')) {
+            if ($school->stamp_path) {
+                $oldDiskPath = str_replace('/storage/', '', $school->stamp_path);
+                if (Storage::disk('public')->exists($oldDiskPath)) {
+                    Storage::disk('public')->delete($oldDiskPath);
+                }
+            }
+            $data['stamp_path'] = null;
+        } elseif ($request->hasFile('stamp')) {
             if ($school->stamp_path) {
                 $oldDiskPath = str_replace('/storage/', '', $school->stamp_path);
                 if (Storage::disk('public')->exists($oldDiskPath)) {

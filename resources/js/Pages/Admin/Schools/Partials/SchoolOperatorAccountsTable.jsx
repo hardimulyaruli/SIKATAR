@@ -31,12 +31,12 @@ export default function SchoolOperatorAccountsTable({ users = [] }) {
                                 users.map((u) => (
                                     <tr key={u.id} className="hover:bg-slate-50 transition-colors">
                                         <td className="py-3 px-4 font-bold text-slate-900 flex items-center gap-2">
-                                            <FiUser className="w-4 h-4 text-blue-600" />
+                                            <FiUser className="w-4 h-4 text-zinc-800" />
                                             <span>{u.name}</span>
                                         </td>
                                         <td className="py-3 px-4 font-mono text-slate-700">{u.email}</td>
                                         <td className="py-3 px-4">
-                                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                            <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-zinc-900 text-white border border-zinc-900 shadow-2xs">
                                                 Operator Sekolah
                                             </span>
                                         </td>

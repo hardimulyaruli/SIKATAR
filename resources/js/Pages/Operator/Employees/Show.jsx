@@ -25,7 +25,7 @@ export default function EmployeeShow({ employee }) {
             <div className="mb-4">
                 <Link
                     href="/operator/employees"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-zinc-900 transition-colors"
                 >
                     <FiArrowLeft className="w-4 h-4" />
                     <span>Kembali ke Daftar Pegawai</span>
@@ -38,7 +38,7 @@ export default function EmployeeShow({ employee }) {
             >
                 <Link
                     href={`/operator/employees/${employee.id}/edit`}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-xl hover:bg-amber-600 transition-colors shadow-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white text-sm font-semibold rounded-xl hover:bg-black transition-colors shadow-xs"
                 >
                     <FiEdit2 className="w-4 h-4" />
                     <span>Edit Data Utama</span>
@@ -54,3 +54,4 @@ export default function EmployeeShow({ employee }) {
         </OperatorLayout>
     );
 }
+

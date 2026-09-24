@@ -5,13 +5,13 @@ export default function Pagination({ links = [], onPageClick }) {
     if (!links || links.length <= 3) return null;
 
     return (
-        <div className="flex items-center justify-center gap-1 mt-6">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 mt-6">
             {links.map((link, key) => {
                 if (link.url === null) {
                     return (
                         <span
                             key={key}
-                            className="px-3.5 py-1.5 text-xs text-slate-400 border border-slate-200/60 rounded-lg cursor-not-allowed bg-slate-50/50"
+                            className="inline-flex items-center justify-center min-w-[36px] h-9 px-3 text-xs text-zinc-400 border border-zinc-200/60 rounded-lg cursor-not-allowed bg-white/30 backdrop-blur-md select-none font-medium"
                             dangerouslySetInnerHTML={{ __html: link.label }}
                         />
                     );
@@ -28,10 +28,10 @@ export default function Pagination({ links = [], onPageClick }) {
                                     onPageClick(link.url);
                                 }
                             }}
-                            className={`px-3.5 py-1.5 text-xs rounded-lg font-medium transition-all ${
+                            className={`inline-flex items-center justify-center min-w-[36px] h-9 px-3 text-xs rounded-lg font-bold backdrop-blur-md transition-all ${
                                 link.active
-                                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30 cursor-default'
-                                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 cursor-pointer'
+                                    ? 'bg-zinc-900/80 text-white border border-zinc-800/90 shadow-sm cursor-default select-none'
+                                    : 'bg-white/50 hover:bg-white/80 text-zinc-900 border border-zinc-300/80 shadow-2xs hover:border-zinc-400 active:scale-95 cursor-pointer'
                             }`}
                             dangerouslySetInnerHTML={{ __html: link.label }}
                         />
@@ -44,10 +44,10 @@ export default function Pagination({ links = [], onPageClick }) {
                         href={link.url}
                         preserveScroll
                         preserveState
-                        className={`px-3.5 py-1.5 text-xs rounded-lg font-medium transition-all ${
+                        className={`inline-flex items-center justify-center min-w-[36px] h-9 px-3 text-xs rounded-lg font-bold backdrop-blur-md transition-all ${
                             link.active
-                                ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
-                                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                                ? 'bg-zinc-900/80 text-white border border-zinc-800/90 shadow-sm cursor-default select-none'
+                                : 'bg-white/50 hover:bg-white/80 text-zinc-900 border border-zinc-300/80 shadow-2xs hover:border-zinc-400 active:scale-95 cursor-pointer'
                         }`}
                         dangerouslySetInnerHTML={{ __html: link.label }}
                     />

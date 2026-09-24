@@ -1,12 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiCamera, FiX, FiRefreshCw, FiAlertCircle } from 'react-icons/fi';
 
 /**
  * CameraCaptureModal.jsx
- * Sub-komponen modular untuk mengambil foto tanda tangan langsung dari kamera/webcam.
- * Mendukung perangkat laptop (webcam) dan smartphone (kamera belakang/dokumen).
+ * Floating picture-in-picture camera pop-up widget on the side of the screen.
+ * Does NOT dim or block the entire screen with a dark backdrop window.
  */
-export default function CameraCaptureModal({ isOpen, onClose, onCapture }) {
+export default function CameraCaptureModal({
+    isOpen,
+    onClose,
+    onCapture,
+    title = 'Ambil Foto Kamera',
+}) {
     if (!isOpen) return null;
 
     const videoRef = useRef(null);
@@ -19,7 +25,7 @@ export default function CameraCaptureModal({ isOpen, onClose, onCapture }) {
     // Dapatkan daftar perangkat kamera yang tersedia
     useEffect(() => {
         if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-            setErrorMsg('Peramban Anda tidak mendukung akses kamera langsung. Silakan gunakan opsi Galeri / File.');
+            setErrorMsg('Browser tidak mendukung akses kamera langsung. Silakan gunakan opsi Galeri.');
             return;
         }
 
@@ -28,7 +34,6 @@ export default function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                 const videoDevices = devices.filter((d) => d.kind === 'videoinput');
                 setCameras(videoDevices);
                 if (videoDevices.length > 0 && !selectedCameraId) {
-                    // Prioritaskan kamera belakang jika ada kata 'back' atau 'environment'
                     const backCam = videoDevices.find((d) =>
                         d.label.toLowerCase().includes('back') ||
                         d.label.toLowerCase().includes('belakang') ||
@@ -37,9 +42,7 @@ export default function CameraCaptureModal({ isOpen, onClose, onCapture }) {
                     setSelectedCameraId(backCam ? backCam.deviceId : videoDevices[0].deviceId);
                 }
             })
-            .catch(() => {
-                // Ignore enumeration errors until stream is requested
-            });
+            .catch(() => {});
     }, []);
 
     // Mulai streaming kamera
@@ -50,8 +53,8 @@ export default function CameraCaptureModal({ isOpen, onClose, onCapture }) {
 
         const constraints = {
             video: selectedCameraId
-                ? { deviceId: { exact: selectedCameraId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
-                : { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                ? { deviceId: { exact: selectedCameraId }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                : { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
             audio: false,
         };
 
@@ -70,9 +73,9 @@ export default function CameraCaptureModal({ isOpen, onClose, onCapture }) {
             .catch((err) => {
                 console.error('Kamera gagal diakses:', err);
                 if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    setErrorMsg('Izin akses kamera ditolak. Mohon izinkan akses kamera di browser Anda.');
+                    setErrorMsg('Izin akses kamera ditolak. Izinkan browser mengakses kamera Anda.');
                 } else {
-                    setErrorMsg('Kamera tidak dapat diakses atau sedang digunakan oleh aplikasi lain.');
+                    setErrorMsg('Kamera tidak dapat diakses atau sedang digunakan aplikasi lain.');
                 }
             });
 
@@ -83,7 +86,7 @@ export default function CameraCaptureModal({ isOpen, onClose, onCapture }) {
         };
     }, [selectedCameraId]);
 
-    // Hentikan stream saat modal ditutup
+    // Hentikan stream saat pop-up ditutup
     const handleClose = () => {
         if (stream) {
             stream.getTracks().forEach((t) => t.stop());
@@ -106,7 +109,7 @@ export default function CameraCaptureModal({ isOpen, onClose, onCapture }) {
         canvas.toBlob(
             (blob) => {
                 if (blob) {
-                    const file = new File([blob], `ttd_kamera_${Date.now()}.jpg`, {
+                    const file = new File([blob], `kamera_${Date.now()}.jpg`, {
                         type: 'image/jpeg',
                         lastModified: Date.now(),
                     });
@@ -127,95 +130,108 @@ export default function CameraCaptureModal({ isOpen, onClose, onCapture }) {
         setSelectedCameraId(cameras[nextIndex].deviceId);
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-xs p-4">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 flex flex-col">
-                {/* Header */}
-                <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-                    <div className="flex items-center gap-2">
-                        <FiCamera className="text-blue-600 w-4 h-4" />
-                        <h3 className="text-sm font-bold text-slate-800">Ambil Foto Tanda Tangan</h3>
+    const modalMarkup = (
+        /* Pop-up Kamera di Tengah Layar */
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+            {/* Backdrop transparan (klik di luar untuk menutup) */}
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={handleClose} />
+
+            {/* Card Pop-up Kamera di Tengah */}
+            <div className="relative z-10 w-full max-w-md flex flex-col bg-white/95 backdrop-blur-2xl rounded-2xl border border-zinc-200/90 shadow-2xl overflow-hidden transition-all duration-200 animate-in zoom-in-95">
+            {/* Header Pop-up */}
+            <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between bg-zinc-50/80 backdrop-blur-xl">
+                <div className="flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-lg bg-zinc-100 border border-zinc-200/80 flex items-center justify-center text-zinc-900 shadow-2xs">
+                        <FiCamera size={13} />
+                    </span>
+                    <h3 className="text-xs font-bold text-zinc-900 tracking-tight">{title}</h3>
+                </div>
+                <button
+                    type="button"
+                    onClick={handleClose}
+                    className="text-zinc-400 hover:text-zinc-800 p-1.5 rounded-lg hover:bg-zinc-200/60 transition-colors cursor-pointer"
+                    title="Tutup Kamera"
+                >
+                    <FiX size={16} />
+                </button>
+            </div>
+
+            {/* Video Viewfinder Area */}
+            <div className="relative bg-black min-h-[260px] max-h-[320px] flex items-center justify-center overflow-hidden">
+                {errorMsg ? (
+                    <div className="p-5 text-center text-rose-400 max-w-xs space-y-2">
+                        <FiAlertCircle className="w-7 h-7 mx-auto text-rose-500 mb-1" />
+                        <p className="text-xs font-medium text-zinc-200">{errorMsg}</p>
+                        <p className="text-[11px] text-zinc-400">
+                            Silakan gunakan opsi "Pilih dari Galeri" untuk mengunggah file foto.
+                        </p>
                     </div>
+                ) : (
+                    <>
+                        <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="w-full h-auto max-h-[320px] object-cover"
+                        />
+
+                        {/* Viewfinder Target Guide Overlay */}
+                        <div className="absolute inset-5 border-2 border-dashed border-white/70 rounded-xl pointer-events-none flex flex-col justify-between p-2">
+                            <span className="text-[10px] font-medium text-white bg-black/60 px-2 py-0.5 rounded self-start backdrop-blur-xs">
+                                Posisikan di dalam kotak
+                            </span>
+                            <span className="text-[9px] text-white/90 bg-black/60 px-1.5 py-0.5 rounded self-center text-center backdrop-blur-xs">
+                                Pastikan pencahayaan cukup terang
+                            </span>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* Footer Controls */}
+            <div className="px-3.5 py-3 bg-zinc-50/80 border-t border-zinc-100 flex items-center justify-between gap-2">
+                {cameras.length > 1 ? (
+                    <button
+                        type="button"
+                        onClick={handleSwitchCamera}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-[11px] font-semibold rounded-xl hover:bg-zinc-100 transition-colors shadow-2xs cursor-pointer"
+                    >
+                        <FiRefreshCw size={11} />
+                        <span>Ganti Kamera</span>
+                    </button>
+                ) : (
+                    <div className="flex items-center gap-1.5 text-[11px] text-zinc-400 font-medium pl-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span>Kamera Aktif</span>
+                    </div>
+                )}
+
+                <div className="flex items-center gap-2">
                     <button
                         type="button"
                         onClick={handleClose}
-                        className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                        className="px-3 py-1.5 text-xs font-semibold text-zinc-500 hover:text-zinc-800 rounded-xl hover:bg-zinc-200/50 transition-colors cursor-pointer"
                     >
-                        <FiX size={18} />
+                        Batal
                     </button>
-                </div>
 
-                {/* Video Viewfinder Area */}
-                <div className="relative bg-black min-h-[300px] flex items-center justify-center overflow-hidden">
-                    {errorMsg ? (
-                        <div className="p-6 text-center text-rose-400 max-w-xs space-y-2">
-                            <FiAlertCircle className="w-8 h-8 mx-auto text-rose-500 mb-1" />
-                            <p className="text-xs font-medium text-slate-200">{errorMsg}</p>
-                            <p className="text-[11px] text-slate-400">
-                                Gunakan tombol "Pilih dari Galeri / File" untuk mengunggah foto yang sudah ada.
-                            </p>
-                        </div>
-                    ) : (
-                        <>
-                            <video
-                                ref={videoRef}
-                                autoPlay
-                                playsInline
-                                muted
-                                className="w-full h-auto max-h-[360px] object-cover"
-                            />
-
-                            {/* Viewfinder Target Guide Overlay */}
-                            <div className="absolute inset-8 border-2 border-dashed border-white/70 rounded-xl pointer-events-none flex flex-col justify-between p-3">
-                                <span className="text-[10px] text-white bg-black/60 px-2 py-0.5 rounded self-start backdrop-blur-xs">
-                                    Posisikan Tanda Tangan di Dalam Kotak
-                                </span>
-                                <span className="text-[10px] text-white/80 bg-black/60 px-2 py-0.5 rounded self-center text-center backdrop-blur-xs">
-                                    Pastikan pencahayaan cukup & tidak berbayang
-                                </span>
-                            </div>
-                        </>
-                    )}
-                </div>
-
-                {/* Footer Controls */}
-                <div className="px-5 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                    {cameras.length > 1 ? (
+                    {!errorMsg && (
                         <button
                             type="button"
-                            onClick={handleSwitchCamera}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 text-xs font-semibold rounded-lg hover:bg-slate-100 transition-colors"
+                            onClick={handleSnap}
+                            disabled={!isStreaming}
+                            className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-zinc-900 hover:bg-black text-white text-xs font-bold rounded-xl transition-all shadow-xs disabled:opacity-50 cursor-pointer"
                         >
-                            <FiRefreshCw size={12} />
-                            <span>Ganti Kamera</span>
+                            <FiCamera size={13} />
+                            <span>Ambil Foto</span>
                         </button>
-                    ) : (
-                        <span className="text-[11px] text-slate-400">Kamera Aktif</span>
                     )}
-
-                    <div className="flex items-center gap-2">
-                        <button
-                            type="button"
-                            onClick={handleClose}
-                            className="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-xl transition-colors"
-                        >
-                            Batal
-                        </button>
-
-                        {!errorMsg && (
-                            <button
-                                type="button"
-                                onClick={handleSnap}
-                                disabled={!isStreaming}
-                                className="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-md shadow-blue-500/20"
-                            >
-                                <FiCamera size={14} />
-                                <span>Ambil Foto</span>
-                            </button>
-                        )}
-                    </div>
                 </div>
             </div>
         </div>
+        </div>
     );
+
+    return typeof document !== 'undefined' ? createPortal(modalMarkup, document.body) : modalMarkup;
 }

@@ -37,8 +37,6 @@ export default function SchoolsIndex({ schools: initialSchools, filters: initial
     const jenjangOptions = [
         { label: 'SD (Sekolah Dasar)', value: 'SD' },
         { label: 'SMP (Sekolah Menengah Pertama)', value: 'SMP' },
-        { label: 'SMA', value: 'SMA' },
-        { label: 'SMK', value: 'SMK' },
     ];
 
     return (
@@ -49,7 +47,7 @@ export default function SchoolsIndex({ schools: initialSchools, filters: initial
                 action={
                     <button
                         onClick={handleOpenModal}
-                        className="px-4 py-2.5 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                        className="px-4 py-2.5 bg-zinc-900/90 hover:bg-black text-white rounded-xl text-xs font-bold transition-all shadow-sm backdrop-blur-xl border border-zinc-800 active:scale-95 flex items-center gap-2 cursor-pointer"
                     >
                         <span>+ Tambah Akun Sekolah Baru</span>
                     </button>

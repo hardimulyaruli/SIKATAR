@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import HeaderKopSurat, { getImageUrl } from './HeaderKopSurat';
 import Icon from '@/Components/UI/Icon';
 import html2canvas from 'html2canvas';
@@ -223,42 +224,10 @@ export default function LiveLetterPreview({
     const signeePangkat = isDisdik ? 'Penata Tk.I' : (safeFormData.signee_pangkat || '');
     const signeeNip = isDisdik ? '197111091994031004' : (safeFormData.signee_nip || school?.headmaster_nip || '...........................................');
 
-    return (
-        <div className="relative flex flex-col items-center w-full">
-            {/* Action Bar Floating Top Right */}
-            <div className="w-full flex items-center justify-between mb-4 glass-card px-4 py-2.5 rounded-xl text-xs print:hidden">
-                <div className="flex items-center gap-2 text-on-surface-variant font-medium">
-                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span>Live Preview Surat Pengantar & Lampiran A4</span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={handlePrint}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline/20 text-on-surface hover:bg-surface-container-low transition-colors shadow-xs"
-                    >
-                        <Icon name="print" className="text-sm text-on-surface-variant" />
-                        <span>Cetak</span>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleDownloadPDF}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-on-primary font-medium hover:bg-on-surface transition-colors shadow-xs"
-                    >
-                        <Icon name="download" className="text-sm text-on-primary" />
-                        <span>Unduh PDF A4</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Document Container */}
-            <div 
-                id="printable-letter"
-                ref={letterRef}
-                className="w-full space-y-8 flex flex-col items-center"
-            >
-                {/* PAGE 1: SURAT PENGANTAR (Exact Image 1 Format) */}
-                <div className="a4-page-section paper-texture shadow-xl relative text-black leading-normal">
+    const letterPagesContent = (
+        <>
+            {/* PAGE 1: SURAT PENGANTAR (Exact Image 1 Format) */}
+            <div className="a4-page-section paper-texture shadow-xl relative text-black leading-normal">
                     {/* Official Kop Surat */}
                     <HeaderKopSurat school={school} isDisdik={isDisdik} />
 
@@ -579,7 +548,53 @@ export default function LiveLetterPreview({
                         </div>
                     </div>
                 )}
+        </>
+    );
+
+    return (
+        <div className="relative flex flex-col items-center w-full">
+            {/* Action Bar Floating Top Right */}
+            <div className="w-full flex items-center justify-between mb-4 glass-card px-4 py-2.5 rounded-xl text-xs print:hidden">
+                <div className="flex items-center gap-2 text-on-surface-variant font-medium">
+                    <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Live Preview Surat Pengantar & Lampiran A4</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={handlePrint}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-lowest border border-outline/20 text-on-surface hover:bg-surface-container-low transition-colors shadow-xs cursor-pointer active:scale-95"
+                    >
+                        <Icon name="print" className="text-sm text-on-surface-variant" />
+                        <span>Cetak</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleDownloadPDF}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-on-primary font-medium hover:bg-on-surface transition-colors shadow-xs cursor-pointer active:scale-95"
+                    >
+                        <Icon name="download" className="text-sm text-on-primary" />
+                        <span>Unduh PDF A4</span>
+                    </button>
+                </div>
             </div>
+
+            {/* Document Container (On Screen Live Preview) */}
+            <div 
+                id="printable-letter"
+                ref={letterRef}
+                className="w-full space-y-8 flex flex-col items-center print:hidden"
+            >
+                {letterPagesContent}
+            </div>
+
+            {/* Dedicated Print Portal rendered directly into document.body for clean, unclipped A4 Print & PDF output */}
+            {typeof document !== 'undefined' && createPortal(
+                <div id="printable-letter-portal" className="hidden print:block">
+                    {letterPagesContent}
+                </div>,
+                document.body
+            )}
         </div>
     );
 }

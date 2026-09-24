@@ -90,7 +90,7 @@ class DataPegawaiSeeder extends Seeder
                         'status_akreditasi' => 'A',
                         'address' => $address,
                         'phone' => null,
-                        'email' => 'operator.' . $this->makeSchoolSlug($tempatTugas) . '@disdik.kbb.go.id',
+                        'email' => $this->makeSchoolSlug($tempatTugas) . '@disdik.kbb.go.id',
                         'headmaster_name' => null,
                         'headmaster_nip' => null,
                         'created_at' => now(),
@@ -200,31 +200,34 @@ class DataPegawaiSeeder extends Seeder
                 $slug = $slug . $kec;
             }
 
-            $email = "operator." . $slug . "@disdik.kbb.go.id";
+            $operatorEmail = "operator." . $slug . "@disdik.kbb.go.id";
+            $schoolEmail = $slug . "@disdik.kbb.go.id";
 
             // Jika email bentrok, gunakan NPSN sebagai pembeda unik
-            if (isset($existingUserEmails[$email]) && ($existingUserSchoolIds[$s->id] ?? null) === null) {
-                $email = "operator." . $slug . $s->npsn . "@disdik.kbb.go.id";
+            if (isset($existingUserEmails[$operatorEmail]) && ($existingUserSchoolIds[$s->id] ?? null) === null) {
+                $operatorEmail = "operator." . $slug . $s->npsn . "@disdik.kbb.go.id";
+                $schoolEmail = $slug . $s->npsn . "@disdik.kbb.go.id";
             }
 
-            // Update sekolah email
-            $s->update(['email' => $email]);
+            // Update sekolah email (hanya email resmi sekolah, BUKAN email login operator)
+            $s->update(['email' => $schoolEmail]);
 
             // Jika user operator untuk sekolah ini sudah ada, update emailnya ke format baru
             if (isset($existingUserSchoolIds[$s->id])) {
                 $userId = $existingUserSchoolIds[$s->id];
                 User::where('id', $userId)->update([
                     'name' => "Operator {$s->name}",
-                    'email' => $email,
+                    'email' => $operatorEmail,
                 ]);
             } else {
                 // Jika belum ada user, tambahkan ke antrean insert
                 $usersToInsert[] = [
                     'name' => "Operator {$s->name}",
-                    'email' => $email,
+                    'email' => $operatorEmail,
                     'password' => $hashedPassword,
                     'role' => 'operator',
                     'school_id' => $s->id,
+                    'must_change_password' => true,
                     'created_at' => $now,
                     'updated_at' => $now,
                 ];
@@ -291,7 +294,10 @@ class DataPegawaiSeeder extends Seeder
             }
         }
 
-        $this->command->info("✅ Selesai! Email seluruh operator sekolah berhasil disingkat (sdn/smpn) ke domain @disdik.kbb.go.id");
+        // Sinkronisasi riwayat jabatan, pangkat/golongan, dan pendidikan
+        $this->call(\App\Console\Commands\SyncEmployeeHistories::class);
+
+        $this->command->info("✅ Selesai! Seluruh data pegawai, riwayat jabatan, pangkat, dan pendidikan berhasil disinkronkan.");
     }
 
     /**

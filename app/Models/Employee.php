@@ -22,6 +22,7 @@ class Employee extends Model
         'cpns_date',
         'pns_date',
         'archived_reason',
+        'duk_order',
     ];
 
     protected $casts = [
@@ -29,6 +30,21 @@ class Employee extends Model
         'cpns_date' => 'date',
         'pns_date' => 'date',
     ];
+
+    public function setNipAttribute($value)
+    {
+        $this->attributes['nip'] = !empty($value) ? trim($value) : null;
+    }
+
+    public function setCpnsDateAttribute($value)
+    {
+        $this->attributes['cpns_date'] = !empty($value) ? $value : null;
+    }
+
+    public function setPnsDateAttribute($value)
+    {
+        $this->attributes['pns_date'] = !empty($value) ? $value : null;
+    }
 
     public function school()
     {

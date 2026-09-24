@@ -47,7 +47,7 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        $targetRoute = $user->role === 'admin' ? 'admin.dashboard' : 'operator.dashboard';
+        $targetRoute = in_array($user->role, ['staff_kepala', 'staff_biasa', 'admin']) ? 'admin.dashboard' : 'operator.dashboard';
 
         return redirect(route($targetRoute, absolute: false));
     }

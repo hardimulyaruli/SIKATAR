@@ -14,7 +14,7 @@ export default function SchoolProfileCard({ school }) {
             className="mb-8"
             header={
                 <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                    <FiHome className="w-4 h-4 text-blue-600" />
+                    <FiHome className="w-4 h-4 text-zinc-900" />
                     Profil & Detail Informasi Sekolah
                 </h3>
             }
@@ -46,10 +46,10 @@ export default function SchoolProfileCard({ school }) {
                             <span className="font-mono font-bold px-3 py-1 bg-slate-100 text-slate-800 rounded-lg border border-slate-200">
                                 NPSN: {school.npsn}
                             </span>
-                            <span className="font-bold px-3 py-1 bg-blue-50 text-blue-800 rounded-lg border border-blue-200">
+                            <span className="font-bold px-3 py-1 bg-zinc-100 text-zinc-900 rounded-lg border border-zinc-300">
                                 Jenjang {school.jenjang}
                             </span>
-                            <span className="font-bold px-3 py-1 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-200">
+                            <span className="font-bold px-3 py-1 bg-zinc-900 text-white rounded-lg border border-zinc-900">
                                 Akreditasi {school.status_akreditasi}
                             </span>
                         </div>
@@ -81,11 +81,11 @@ export default function SchoolProfileCard({ school }) {
                                 Status Akreditasi:
                             </span>
                             <div className="flex items-center gap-2.5">
-                                <div className="p-2 rounded-lg bg-blue-50 text-blue-600 shrink-0">
+                                <div className="p-2 rounded-lg bg-zinc-100 text-zinc-900 border border-zinc-200 shrink-0">
                                     <FiAward className="w-4 h-4" />
                                 </div>
                                 <div>
-                                    <p className="font-bold text-blue-950 text-sm">
+                                    <p className="font-bold text-zinc-950 text-sm">
                                         Peringkat Akreditasi {school.status_akreditasi}
                                     </p>
                                     <p className="text-slate-500 text-[11px]">Terverifikasi Disdik KBB</p>
@@ -101,7 +101,7 @@ export default function SchoolProfileCard({ school }) {
                                 Alamat Lengkap Sekolah:
                             </span>
                             <div className="flex items-start gap-2 text-slate-800">
-                                <FiMapPin className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                                <FiMapPin className="w-4 h-4 text-zinc-700 shrink-0 mt-0.5" />
                                 <span className="font-medium leading-relaxed">
                                     {school.address || 'Alamat belum diisi'}
                                 </span>
@@ -119,7 +119,9 @@ export default function SchoolProfileCard({ school }) {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <FiMail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                    <span className="font-medium">{school.email || '-'}</span>
+                                    <span className="font-medium">
+                                        {school.email ? school.email.replace(/^operator\./i, '') : '-'}
+                                    </span>
                                 </div>
                             </div>
                         </div>

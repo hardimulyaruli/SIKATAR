@@ -1,22 +1,81 @@
-import React from 'react';
+import React, { useState } from 'react';
 import OperatorLayout from '@/Layouts/OperatorLayout';
 import Icon from '@/Components/UI/Icon';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import OperatorStatCards from './Partials/OperatorStatCards';
 import OperatorRecentDispatchesFeed from './Partials/OperatorRecentDispatchesFeed';
 import OperatorQuickActionsSidebar from './Partials/OperatorQuickActionsSidebar';
+import RetirementNotificationModal from './Employees/Partials/RetirementNotificationModal';
+import FirstLoginChangePasswordModal from '@/Components/Auth/FirstLoginChangePasswordModal';
 
 /**
  * OperatorDashboard orchestrates the school operator dashboard:
  * Status counters, quick action shortcuts, recent submission timeline, and live status.
  * Single Responsibility: Operator dashboard view orchestration.
  */
-export default function OperatorDashboard({ school, stats = {}, recent_applications = [], templates = [] }) {
+export default function OperatorDashboard({
+    school,
+    stats = {},
+    recent_applications = [],
+    templates = [],
+    approachingPensionEmployees = [],
+    approachingPensionCount = 0,
+}) {
+    const { auth } = usePage().props;
+    const mustChangePassword = Boolean(auth?.user?.must_change_password);
+    const userId = auth?.user?.id || 'guest';
+    const loginSessionId = auth?.session_id || userId;
+    const hasPensionReminders = approachingPensionCount > 0;
+
+    // Session keys terikat ke ID sesi login Laravel:
+    // - Saat logout & login kembali: ID sesi baru dibuat -> pop-up otomatis muncul kembali!
+    // - Saat refresh halaman beranda: ID sesi sama -> pop-up tidak akan muncul berulang kali.
+    const retirementSessionKey = `retirement_popup_shown_sess_${loginSessionId}`;
+    const passwordSessionKey = `password_popup_shown_sess_${loginSessionId}`;
+
     const todayStr = new Date().toLocaleDateString('en-US', {
         month: 'long',
         day: 'numeric',
         year: 'numeric',
     });
+
+    // 1. Pop-up Pengingat Pensiun: Hanya muncul pas login awal jika belum pernah dilihat di sesi ini
+    const [isRetirementModalOpen, setIsRetirementModalOpen] = useState(() => {
+        if (!hasPensionReminders || typeof window === 'undefined') return false;
+        return !sessionStorage.getItem(retirementSessionKey);
+    });
+
+    // 2. Pop-up Ganti Password: Hanya muncul pas login awal jika belum pernah dilihat di sesi ini
+    //    Jika ada pop-up pensiun yang sedang/akan tampil, tahan dulu
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(() => {
+        if (!mustChangePassword || typeof window === 'undefined') return false;
+        if (sessionStorage.getItem(passwordSessionKey)) return false;
+        const retirementWillOpen = hasPensionReminders && !sessionStorage.getItem(retirementSessionKey);
+        return !retirementWillOpen;
+    });
+
+    const handleCloseRetirementModal = () => {
+        setIsRetirementModalOpen(false);
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem(retirementSessionKey, 'true');
+        }
+        // Muncul kedua setelah pop-up pensiun ditutup jika belum pernah dilihat di sesi ini
+        if (mustChangePassword && typeof window !== 'undefined') {
+            const alreadySeenPassword = sessionStorage.getItem(passwordSessionKey);
+            if (!alreadySeenPassword) {
+                setTimeout(() => {
+                    setIsPasswordModalOpen(true);
+                }, 200);
+            }
+        }
+    };
+
+    const handleClosePasswordModal = () => {
+        setIsPasswordModalOpen(false);
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem(passwordSessionKey, 'true');
+        }
+    };
 
     return (
         <OperatorLayout>
@@ -49,6 +108,21 @@ export default function OperatorDashboard({ school, stats = {}, recent_applicati
                 <OperatorRecentDispatchesFeed applications={recent_applications} />
                 <OperatorQuickActionsSidebar />
             </div>
+
+            {/* Pop-up Pengingat Pensiun saat Login ke Dashboard */}
+            <RetirementNotificationModal
+                isOpen={isRetirementModalOpen}
+                onClose={handleCloseRetirementModal}
+                approachingEmployees={approachingPensionEmployees}
+                isDashboard={true}
+            />
+
+            {/* Pop-up Ganti Password Akun saat Pertama Kali Login */}
+            <FirstLoginChangePasswordModal
+                isOpen={isPasswordModalOpen}
+                onClose={handleClosePasswordModal}
+                user={auth?.user}
+            />
         </OperatorLayout>
     );
 }

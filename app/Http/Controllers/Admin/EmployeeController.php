@@ -5,13 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\School;
+use App\Services\EmployeeExportService;
+use App\Services\RetirementService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class EmployeeController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, RetirementService $retirementService)
     {
+        // Otomatis sinkronkan seluruh pegawai yang melewati batas usia pensiun
+        $retirementService->syncRetirements();
+
         // Query data pegawai beserta relasi sekolah
         $query = Employee::with('school');
 
@@ -55,8 +60,18 @@ class EmployeeController extends Controller
         ]);
     }
 
+    /**
+     * Export rekapitulasi data kepegawaian ke file Excel (.xlsx).
+     * Mendukung ekspor seluruh pegawai se-KBB atau difilter berdasarkan sekolah/status tertentu.
+     */
+    public function export(Request $request, EmployeeExportService $exportService)
+    {
+        return $exportService->export($request->only(['school_id', 'status_pegawai', 'search']));
+    }
+
     public function create()
     {
+        $this->authorizeStaffKepala();
         $schools = School::orderBy('name')->get();
         return Inertia::render('Admin/Employees/Create', [
             'schools' => $schools
@@ -65,6 +80,7 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorizeStaffKepala();
         $validated = $request->validate([
             'school_id' => 'required|exists:schools,id',
             'nip' => 'nullable|string|unique:employees,nip',
@@ -78,6 +94,17 @@ class EmployeeController extends Controller
             'cpns_date' => 'nullable|date',
             'pns_date' => 'nullable|date',
         ]);
+
+        if ($validated['status_pegawai'] === 'Honorer') {
+            $validated['nip'] = null;
+            $validated['cpns_date'] = null;
+            $validated['pns_date'] = null;
+        } elseif ($validated['status_pegawai'] === 'PPPK') {
+            $validated['cpns_date'] = null;
+            $validated['pns_date'] = null;
+        } elseif ($validated['status_pegawai'] === 'CPNS') {
+            $validated['pns_date'] = null;
+        }
 
         $employee = new Employee($validated);
         if ($request->hasFile('photo')) {
@@ -99,6 +126,7 @@ class EmployeeController extends Controller
 
     public function edit(Employee $employee)
     {
+        $this->authorizeStaffKepala();
         $schools = School::orderBy('name')->get();
         return Inertia::render('Admin/Employees/Edit', [
             'employee' => $employee,
@@ -108,6 +136,7 @@ class EmployeeController extends Controller
 
     public function update(Request $request, Employee $employee)
     {
+        $this->authorizeStaffKepala();
         $validated = $request->validate([
             'school_id' => 'required|exists:schools,id',
             'nip' => 'nullable|string|unique:employees,nip,' . $employee->id,
@@ -121,6 +150,17 @@ class EmployeeController extends Controller
             'cpns_date' => 'nullable|date',
             'pns_date' => 'nullable|date',
         ]);
+
+        if ($validated['status_pegawai'] === 'Honorer') {
+            $validated['nip'] = null;
+            $validated['cpns_date'] = null;
+            $validated['pns_date'] = null;
+        } elseif ($validated['status_pegawai'] === 'PPPK') {
+            $validated['cpns_date'] = null;
+            $validated['pns_date'] = null;
+        } elseif ($validated['status_pegawai'] === 'CPNS') {
+            $validated['pns_date'] = null;
+        }
 
         if ($request->hasFile('photo')) {
             if ($employee->photo_path) {
@@ -140,6 +180,7 @@ class EmployeeController extends Controller
 
     public function destroy(Employee $employee)
     {
+        $this->authorizeStaffKepala();
         $employee->delete();
 
         return redirect()->route('admin.employees.index')->with('success', 'Data pegawai berhasil dihapus.');
@@ -147,6 +188,7 @@ class EmployeeController extends Controller
 
     public function uploadDocument(Request $request, Employee $employee)
     {
+        $this->authorizeStaffKepala();
         $request->validate([
             'category' => 'required|string|max:255',
             'document_file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120', // 5MB max
@@ -168,10 +210,19 @@ class EmployeeController extends Controller
 
     public function deleteDocument(Request $request, $documentId)
     {
+        $this->authorizeStaffKepala();
         $document = \App\Models\EmployeeDocument::findOrFail($documentId);
         \Illuminate\Support\Facades\Storage::disk('public')->delete($document->file_path);
         $document->delete();
 
         return redirect()->back()->with('success', 'Dokumen berhasil dihapus.');
+    }
+
+    private function authorizeStaffKepala(): void
+    {
+        $role = \Illuminate\Support\Facades\Auth::user()?->role;
+        if (!in_array($role, ['staff_kepala', 'admin'])) {
+            abort(403, 'Akses ditolak. Staf biasa hanya memiliki akses untuk melihat data pegawai tanpa mengubah.');
+        }
     }
 }

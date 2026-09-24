@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { FiX } from 'react-icons/fi';
 import { useDeletionDecisionForm } from '@/Hooks/useDeletionDecisionForm';
 
@@ -15,28 +16,28 @@ export default function RejectDeletionModal({ request, onClose }) {
 
     if (!request) return null;
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <h3 className="font-bold text-slate-800 text-base">Tolak Pengajuan Penghapusan</h3>
+    const modalMarkup = (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <div className="bg-white/95 backdrop-blur-2xl rounded-2xl max-w-md w-full p-6 shadow-2xl border border-zinc-200 animate-in fade-in zoom-in duration-200">
+                <div className="flex items-center justify-between pb-3 border-b border-zinc-200">
+                    <h3 className="font-bold text-zinc-900 text-base">Tolak Pengajuan Penghapusan</h3>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                        className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 border border-transparent hover:border-zinc-200 transition-all cursor-pointer"
                     >
                         <FiX className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="my-4 p-3.5 bg-rose-50 rounded-xl border border-rose-200 text-xs text-rose-800 leading-relaxed">
-                    Pengajuan penghapusan untuk pegawai <strong>{request.employee?.name}</strong> akan ditolak dan pegawai tetap berstatus aktif.
+                <div className="my-4 p-3.5 bg-zinc-100/90 rounded-xl border border-zinc-200 text-xs text-zinc-800 leading-relaxed font-medium">
+                    Pengajuan penghapusan untuk pegawai <strong className="text-zinc-950">{request.employee?.name}</strong> akan ditolak dan pegawai tetap berstatus aktif.
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1">
-                            Alasan Penolakan <span className="text-rose-500">*</span>
+                        <label className="block text-xs font-bold text-zinc-800 mb-1">
+                            Alasan Penolakan <span className="text-zinc-950">*</span>
                         </label>
                         <textarea
                             rows="3"
@@ -44,10 +45,10 @@ export default function RejectDeletionModal({ request, onClose }) {
                             value={data.admin_notes}
                             onChange={(e) => setData('admin_notes', e.target.value)}
                             placeholder="Contoh: Surat Perintah belum ditandatangani oleh Kepala Sekolah, atau alasan tidak sesuai."
-                            className="w-full text-xs rounded-xl border border-slate-200 p-2.5 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                            className="w-full text-xs rounded-xl border border-zinc-300 bg-white/70 p-2.5 text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-zinc-900 transition-all"
                         />
                         {errors.admin_notes && (
-                            <p className="text-xs text-rose-500 mt-1">{errors.admin_notes}</p>
+                            <p className="text-xs text-zinc-950 font-bold mt-1">{errors.admin_notes}</p>
                         )}
                     </div>
 
@@ -55,16 +56,16 @@ export default function RejectDeletionModal({ request, onClose }) {
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition-colors"
+                            className="px-4 py-2 text-xs font-bold rounded-xl text-zinc-800 bg-white/70 hover:bg-zinc-100 border border-zinc-300/80 backdrop-blur-xl transition-all active:scale-95 cursor-pointer shadow-2xs"
                         >
                             Batal
                         </button>
                         <button
                             type="submit"
                             disabled={processing}
-                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-50 cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-zinc-900/90 hover:bg-black text-white text-xs font-bold rounded-xl border border-zinc-800 backdrop-blur-xl shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
                         >
-                            <FiX className="w-4 h-4" />
+                            <FiX className="w-4 h-4 stroke-[2.5]" />
                             <span>{processing ? 'Menolak...' : 'Tolak Pengajuan'}</span>
                         </button>
                     </div>
@@ -72,4 +73,6 @@ export default function RejectDeletionModal({ request, onClose }) {
             </div>
         </div>
     );
+
+    return typeof document !== 'undefined' ? createPortal(modalMarkup, document.body) : modalMarkup;
 }
